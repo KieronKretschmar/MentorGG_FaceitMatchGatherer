@@ -1,0 +1,3 @@
+[submodule "rabbitcommunicationlib"]
+	path = rabbitcommunicationlib
+	url = https://gitlab.com/mentorgg/engine/RabbitCommunicationLib.git

@@ -68,8 +68,21 @@ namespace FaceitMatchGatherer
 
         private async Task<List<FaceitMatchData>> GetNewMatches(long steamId, int maxMatches, int maxAgeInDays)
         {
-            // Get 
-            var recentMatches = await _apiCommunicator.GetPlayerMatches(steamId, maxMatches, maxAgeInDays);
+            IEnumerable<FaceitMatchData> recentMatches;
+            try
+            {
+                recentMatches = await _apiCommunicator.GetPlayerMatches(steamId, maxMatches, maxAgeInDays);
+            }
+            catch (Exception e)
+            {
+                if (e is FaceitApiCommunicator.InvalidApiKeyException || e is FaceitApiCommunicator.ExceededApiLimitException)
+                {
+                    return new List<FaceitMatchData>();
+                }
+
+                throw;
+            }
+
 
             // Remove matches already in db
             var knownMatchIds = _context.Matches

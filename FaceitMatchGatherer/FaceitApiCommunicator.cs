@@ -57,16 +57,16 @@ namespace FaceitMatchGatherer
 
             if (!json.ContainsKey("items"))
             {
-                throw new UnauthorizedAccessException($"Invalid Faceit API key.");
+                _logger.LogError($"Invalid Faceit API key. Response:" + json.ToString());
+                throw new InvalidApiKeyException($"Invalid Faceit API key. Response:" + json.ToString());
             }
 
             var jsonMatches = json["items"];
-
             // Happens when API Limit exceeded
             if (jsonMatches == null)
             {
-                _logger.LogWarning("No 'items' found in response from Faceit api. Json: " + json.ToString());
-                return new List<FaceitMatchData>();
+                _logger.LogWarning("No 'items' found in response from Faceit api. Assuming Faceit API limit exceeded. " + json.ToString());
+                throw new ExceededApiLimitException("No 'items' found in response from Faceit api. Assuming Faceit API limit exceeded. " + json.ToString());
             }
 
             // Skip matches that lie more than 2 weeks in the past or the date could not be parsed
@@ -110,5 +110,28 @@ namespace FaceitMatchGatherer
             string demoUrl = demoUrlField.First().ToString();
             return demoUrl;
         }
+
+        public class ExceededApiLimitException : Exception
+        {
+            public ExceededApiLimitException(string message) : base(message)
+            {
+            }
+
+            public ExceededApiLimitException(string message, Exception innerException) : base(message, innerException)
+            {
+            }
+        }
+
+        public class InvalidApiKeyException : Exception
+        {
+            public InvalidApiKeyException(string message) : base(message)
+            {
+            }
+
+            public InvalidApiKeyException(string message, Exception innerException) : base(message, innerException)
+            {
+            }
+        }
+
     }
 }

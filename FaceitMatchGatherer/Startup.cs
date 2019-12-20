@@ -67,6 +67,18 @@ namespace FaceitMatchGatherer
                         options.UseInMemoryDatabase(databaseName: "MyInMemoryDatabase").UseInternalServiceProvider(sp);
                     });
             }
+
+            // Add Swagger for API documentation
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Title = "FaceitMatchGatherer API",
+                    Version = "v1"
+                });
+                
+            });
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -86,6 +98,13 @@ namespace FaceitMatchGatherer
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+            });
+
+            // Add Swagger for API documentation
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Example API v1");
             });
         }
     }

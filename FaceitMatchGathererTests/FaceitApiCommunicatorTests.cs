@@ -25,9 +25,6 @@ namespace FaceitMatchGathererTests
             var services = new ServiceCollection();
             services.AddLogging(x => x.AddConsole().AddDebug());
 
-            services.AddSingleton<IFaceitApiCommunicator, FaceitApiCommunicator>();
-            services.AddSingleton<IRabbitProducer, RabbitProducer>();
-
             var builder = new ConfigurationBuilder()
                 .AddEnvironmentVariables();
             config = builder.Build();

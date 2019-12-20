@@ -5,6 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using RabbitTransfer.Interfaces;
+using RabbitTransfer.TransferModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -43,17 +45,14 @@ namespace FaceitMatchGathererTests
                 new FaceitMatchData{ FaceitMatchId = "Second"},
             };
 
+            // Setup mocks
+            var mockFaceitOAuthCommunicator = new Mock<IFaceitOAuthCommunicator>();
+            var mockRabbitProducer = new Mock<IProducer<GathererTransferModel>>();
             // Setup mockFaceitApiCommunicator such that GetPlayerMatches returns matches
             var mockFaceitApiCommunicator = new Mock<IFaceitApiCommunicator>();
             mockFaceitApiCommunicator
                 .Setup(x => x.GetPlayerMatches(It.Is<long>(x => x == steamId), It.Is<int>(x => x == maxMatches), It.Is<int>(x => x == maxAgeInDays)))
                 .Returns(Task.FromResult(matches));
-
-            // Setup mockFaceitOAuthCommunicator and make its CreateUser() method throw a FaceitFailedUserCreationException
-            var mockFaceitOAuthCommunicator = new Mock<IFaceitOAuthCommunicator>();
-
-            // Setup mockFaceitApiCommunicator and expect it to publish 2 messages
-            var mockRabbitProducer = new Mock<IRabbitProducer>();
 
             // Create options with InMemoryDatabase
             var options = new DbContextOptionsBuilder<FaceitContext>()
@@ -75,7 +74,7 @@ namespace FaceitMatchGathererTests
                 var allMatchesInDb = matches.All(x => context.Matches.Any(y => y.FaceitMatchId == x.FaceitMatchId));
                 Assert.IsTrue(allMatchesInDb);
 
-                mockRabbitProducer.Verify(x => x.PublishMessage(It.IsAny<string>()), Times.Exactly(matches.Count()));
+                mockRabbitProducer.Verify(x => x.PublishMessage(It.IsAny<string>(), It.IsAny<GathererTransferModel>()), Times.Exactly(matches.Count()));
             }
 
             // Call endpoint again, expecting no more matches to be added to happen
@@ -86,7 +85,7 @@ namespace FaceitMatchGathererTests
                 Assert.IsFalse(foundMatches);
 
                 // Verify that no more messages were published
-                mockRabbitProducer.Verify(x => x.PublishMessage(It.IsAny<string>()), Times.Exactly(matches.Count()));
+                mockRabbitProducer.Verify(x => x.PublishMessage(It.IsAny<string>(), It.IsAny<GathererTransferModel>()), Times.Exactly(matches.Count()));
             }
         }
     }

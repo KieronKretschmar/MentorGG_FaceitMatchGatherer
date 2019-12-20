@@ -2,6 +2,8 @@
 using Entities.Models;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using RabbitTransfer.Interfaces;
+using RabbitTransfer.TransferModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,9 +24,9 @@ namespace FaceitMatchGatherer
         private ILogger<FaceitMatchesWorker> _logger;
         private readonly FaceitContext _context;
         private readonly IFaceitApiCommunicator _apiCommunicator;
-        private readonly IRabbitProducer _rabbitProducer;
+        private readonly IProducer<GathererTransferModel> _rabbitProducer;
 
-        public FaceitMatchesWorker(ILogger<FaceitMatchesWorker> logger, FaceitContext context, IFaceitApiCommunicator apiCommunicator, IRabbitProducer rabbitProducer)
+        public FaceitMatchesWorker(ILogger<FaceitMatchesWorker> logger, FaceitContext context, IFaceitApiCommunicator apiCommunicator, IProducer<GathererTransferModel> rabbitProducer)
         {
             _logger = logger;
             _context = context;
@@ -54,10 +56,9 @@ namespace FaceitMatchGatherer
 
                 // Create rabbit transfer model
                 var model = match.ToTransferModel();
-                var message = JsonConvert.SerializeObject(model);
 
                 // Publish to rabbit queue
-                _rabbitProducer.PublishMessage(message);
+                _rabbitProducer.PublishMessage(new Guid().ToString(), model);
             }
 
             var matchesFound = matches.Any();

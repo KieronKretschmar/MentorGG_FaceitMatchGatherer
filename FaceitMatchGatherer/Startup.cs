@@ -11,9 +11,18 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.OpenApi.Models;
+using RabbitTransfer.Interfaces;
+using RabbitTransfer.Producer;
+using RabbitTransfer.Queues;
+using RabbitTransfer.TransferModels;
 
 namespace FaceitMatchGatherer
 {
+    /// <summary>
+    /// 
+    /// Requires environment variables: ["MYSQL_CONNECTION_STRING", "AMQP_URI", "AMQP_FACEIT_QUEUE"]
+    /// </summary>
     public class Startup
     {
         public Startup(IConfiguration configuration)
@@ -31,8 +40,18 @@ namespace FaceitMatchGatherer
 
             services.AddSingleton<IFaceitApiCommunicator, FaceitApiCommunicator>();
             services.AddSingleton<IFaceitOAuthCommunicator, FaceitOAuthCommunicator>();
-            services.AddSingleton<IRabbitProducer, RabbitProducer>();
             services.AddTransient<IFaceitMatchesWorker, FaceitMatchesWorker>();
+
+
+            // Create producer
+            var connection = new QueueConnection(
+                Configuration.GetValue<string>("AMQP_URI"),
+                Configuration.GetValue<string>("AMQP_FACEIT_QUEUE"));
+
+            services.AddSingleton<IProducer<GathererTransferModel>>(sp =>
+            {
+                return new Producer<GathererTransferModel>(connection);
+            });
 
             // if a connectionString is set use mysql, else use InMemory
             var connString = Configuration.GetValue<string>("MYSQL_CONNECTION_STRING");

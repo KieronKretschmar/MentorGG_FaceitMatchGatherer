@@ -37,7 +37,7 @@ namespace FaceitMatchGathererTests
         [TestMethod]
         public async Task CreateUserTest()
         {
-            var options = FaceitTestHelper.GetDatabaseOptions("NonMatchingSteamAndFaceitAccounts");
+            var options = FaceitTestHelper.GetDatabaseOptions("CreateUserTest");
             var user = FaceitTestHelper.GetRandomUser();
 
             // Create User by calling PostUser

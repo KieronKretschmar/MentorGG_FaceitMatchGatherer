@@ -29,12 +29,15 @@ namespace FaceitMatchGathererTests
         }
 
         /// <summary>
-        /// Tests WorkUser()
+        /// Tests WorkUser() mocking 2 matches to be found, expecting matches to be published to the queue, and written to the database. 
+        /// Also checks that trying to add those matches again once more does not lead have an effect on the queue and database.
         /// </summary>
         /// <returns></returns>
         [TestMethod]
         public async Task WorkUserTest()
         {
+            var options = FaceitTestHelper.GetDatabaseOptions("WorkUserTest");
+
             var steamId = 1;
             var maxMatches = 20;
             var maxAgeInDays = 60;
@@ -53,11 +56,6 @@ namespace FaceitMatchGathererTests
             mockFaceitApiCommunicator
                 .Setup(x => x.GetPlayerMatches(It.Is<long>(x => x == steamId), It.Is<int>(x => x == maxMatches), It.Is<int>(x => x == maxAgeInDays)))
                 .Returns(Task.FromResult(matches));
-
-            // Create options with InMemoryDatabase
-            var options = new DbContextOptionsBuilder<FaceitContext>()
-                .UseInMemoryDatabase(databaseName: "MyTestMethod")
-                .Options;
 
             // Call WorkUser and expect it to publish matches to queue and database
             using (var context = new FaceitContext(options))

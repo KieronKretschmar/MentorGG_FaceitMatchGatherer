@@ -32,7 +32,13 @@ namespace FaceitMatchGatherer.Controllers
             _faceitMatchesWorker = faceitMatchesWorker;
         }
 
-        // GET: api/Users/<steamId>
+        /// <summary>
+        /// Gets the database entry of the Faceit user with the given steamId.
+        /// 
+        /// GET: api/Users/<steamId>
+        /// </summary>
+        /// <param name="steamId"></param>
+        /// <returns></returns>
         [HttpGet("{steamId}")]
         public async Task<ActionResult<User>> GetUser(long steamId)
         {
@@ -47,12 +53,13 @@ namespace FaceitMatchGatherer.Controllers
         }
 
         /// <summary>
+        /// Endpoint for creating a new Faceit user. Has to be used as callback for Faceit's OAuth JS library.
         /// 
+        /// POST: api/Users/<steamId>
         /// </summary>
         /// <param name="steamId"></param>
-        /// <param name="code">Authorization code provided by Faceit API.</param>
+        /// <param name="code">Authorization code provided by Faceit OAuth implementation.</param>
         /// <returns></returns>
-        // POST: api/Users/<steamId>
         [HttpPost("{steamId}")]
         public async Task<ActionResult> PostUser(long steamId, string code)
         {
@@ -90,7 +97,13 @@ namespace FaceitMatchGatherer.Controllers
             return Ok();
         }
 
-        // DELETE: api/Users/<steamId>
+        /// <summary>
+        /// Removes User from database.
+        /// 
+        /// DELETE: api/Users/<steamId>
+        /// </summary>
+        /// <param name="steamId"></param>
+        /// <returns></returns>
         [HttpDelete("{steamId}")]
         public async Task<ActionResult> DeleteUser(long steamId)
         {
@@ -107,7 +120,13 @@ namespace FaceitMatchGatherer.Controllers
             return Ok();
         }
 
-        // GET: api/Users/<steamId>/LookForMatches
+        /// <summary>
+        /// Triggers calls to the Faceit API to find new matches of the specified user, and initiates the process of analyzing them.
+        /// 
+        /// POST api/Users/<steamId>/LookForMatches
+        /// </summary>
+        /// <param name="steamId"></param>
+        /// <returns></returns>
         [HttpPost("{steamId}/LookForMatches")]
         public async Task<ActionResult<bool>> PostLookForMatches(long steamId)
         {

@@ -57,16 +57,18 @@ namespace FaceitMatchGatherer
 
             if (!json.ContainsKey("items"))
             {
-                _logger.LogError($"Invalid Faceit API key. Response:" + json.ToString());
-                throw new InvalidApiKeyException($"Invalid Faceit API key. Response:" + json.ToString());
+                var errorMessage = $"Invalid Faceit API key. Response: {json.ToString()}";
+                _logger.LogError(errorMessage);
+                throw new InvalidApiKeyException(errorMessage);
             }
 
             var jsonMatches = json["items"];
             // Happens when API Limit exceeded
             if (jsonMatches == null)
             {
-                _logger.LogWarning("No 'items' found in response from Faceit api. Assuming Faceit API limit exceeded. " + json.ToString());
-                throw new ExceededApiLimitException("No 'items' found in response from Faceit api. Assuming Faceit API limit exceeded. " + json.ToString());
+                var errorMessage = $"No 'items' found in response from Faceit api. Assuming Faceit API limit exceeded. {json.ToString()}";
+                _logger.LogError(errorMessage);
+                throw new ExceededApiLimitException(errorMessage);
             }
 
             // Skip matches that lie more than 2 weeks in the past or the date could not be parsed

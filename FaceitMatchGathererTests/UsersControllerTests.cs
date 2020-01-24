@@ -54,7 +54,7 @@ namespace FaceitMatchGathererTests
 
                 // Create UsersController and call PostUser
                 var controller = new UsersController(serviceProvider.GetService<ILogger<UsersController>>(), context, mockFaceitOAuthCommunicator.Object, mockFaceitApiCommunicator.Object, mockFaceitMatchesWorker.Object);
-                var result = await controller.PostUser(user.SteamId, "");
+                var result = await controller.CreateUser(user.SteamId, "");
 
                 // Verify 200 response
                 Assert.IsInstanceOfType(result, typeof(Microsoft.AspNetCore.Mvc.OkResult));
@@ -113,7 +113,7 @@ namespace FaceitMatchGathererTests
 
                 // Create UsersController and call PostUser
                 var controller = new UsersController(serviceProvider.GetService<ILogger<UsersController>>(), context, mockFaceitOAuthCommunicator.Object, mockFaceitApiCommunicator.Object, mockFaceitMatchesWorker.Object);
-                var result = await controller.PostUser(user.SteamId, "");
+                var result = await controller.CreateUser(user.SteamId, "");
 
                 // Verify 200 response
                 Assert.IsInstanceOfType(result, typeof(Microsoft.AspNetCore.Mvc.OkResult));
@@ -158,7 +158,7 @@ namespace FaceitMatchGathererTests
 
                 // Create UsersController and call PostUser
                 var controller = new UsersController(serviceProvider.GetService<ILogger<UsersController>>(), context, mockFaceitOAuthCommunicator.Object, mockFaceitApiCommunicator.Object, mockFaceitMatchesWorker.Object);
-                var result = await controller.PostUser(user.SteamId, "");
+                var result = await controller.CreateUser(user.SteamId, "");
 
                 // Verify 400 response
                 Assert.IsInstanceOfType(result, typeof(Microsoft.AspNetCore.Mvc.BadRequestResult));
@@ -196,7 +196,7 @@ namespace FaceitMatchGathererTests
 
                 // Create UsersController and call PostUser
                 var controller = new UsersController(serviceProvider.GetService<ILogger<UsersController>>(), context, mockFaceitOAuthCommunicator.Object, mockFaceitApiCommunicator.Object, mockFaceitMatchesWorker.Object);
-                var result = await controller.PostUser(steamId, "");
+                var result = await controller.CreateUser(steamId, "");
 
                 // Verify 400 response
                 Assert.IsInstanceOfType(result, typeof(Microsoft.AspNetCore.Mvc.BadRequestResult));
@@ -280,7 +280,7 @@ namespace FaceitMatchGathererTests
 
                 // Create UsersController and call LookForMatches
                 var usersController = new UsersController(serviceProvider.GetService<ILogger<UsersController>>(), context, mockFaceitOAuthCommunicator.Object, mockFaceitApiCommunicator.Object, mockFaceitMatchesWorker.Object);
-                var lfmResponse = await usersController.PostLookForMatches(user.SteamId);
+                var lfmResponse = await usersController.LookForMatches(user.SteamId);
 
                 // Verify that WorkUser was called
                 mockFaceitMatchesWorker.Verify(x => x.WorkUser(user.SteamId, It.IsAny<int>(), It.IsAny<int>()), Times.Once);

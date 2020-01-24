@@ -13,7 +13,7 @@ using Microsoft.Extensions.Logging;
 
 namespace FaceitMatchGatherer.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("users")]
     [ApiController]
     public class UsersController : ControllerBase
     {
@@ -34,8 +34,8 @@ namespace FaceitMatchGatherer.Controllers
 
         /// <summary>
         /// Gets the database entry of the Faceit user with the given steamId.
-        /// 
-        /// GET: api/Users/<steamId>
+        ///
+        /// GET: users/<steamId>
         /// </summary>
         /// <param name="steamId"></param>
         /// <returns></returns>
@@ -54,14 +54,14 @@ namespace FaceitMatchGatherer.Controllers
 
         /// <summary>
         /// Endpoint for creating a new Faceit user. Has to be used as callback for Faceit's OAuth JS library.
-        /// 
-        /// POST: api/Users/<steamId>
+        ///
+        /// POST: users/<steamId>
         /// </summary>
         /// <param name="steamId"></param>
         /// <param name="code">Authorization code provided by Faceit OAuth implementation.</param>
         /// <returns></returns>
         [HttpPost("{steamId}")]
-        public async Task<ActionResult> PostUser(long steamId, string code)
+        public async Task<ActionResult> CreateUser(long steamId, string code)
         {
             // Query faceit for more data about user
             User user;
@@ -99,8 +99,8 @@ namespace FaceitMatchGatherer.Controllers
 
         /// <summary>
         /// Removes User from database.
-        /// 
-        /// DELETE: api/Users/<steamId>
+        ///
+        /// DELETE: /users/<steamId>
         /// </summary>
         /// <param name="steamId"></param>
         /// <returns></returns>
@@ -122,13 +122,13 @@ namespace FaceitMatchGatherer.Controllers
 
         /// <summary>
         /// Triggers calls to the Faceit API to find new matches of the specified user, and initiates the process of analyzing them.
-        /// 
-        /// POST api/Users/<steamId>/LookForMatches
+        ///
+        /// POST /users/<steamId>/look-for-matches
         /// </summary>
         /// <param name="steamId"></param>
         /// <returns></returns>
-        [HttpPost("{steamId}/LookForMatches")]
-        public async Task<ActionResult<bool>> PostLookForMatches(long steamId)
+        [HttpPost("{steamId}/look-for-matches")]
+        public async Task<ActionResult<bool>> LookForMatches(long steamId)
         {
             return await _faceitMatchesWorker.WorkUser(steamId, 20, 60);
         }

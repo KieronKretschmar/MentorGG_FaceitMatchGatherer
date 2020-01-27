@@ -36,8 +36,6 @@ namespace FaceitMatchGatherer
 
         /// <summary>
         /// Looks for a new matches for a user, saves them in the database and pushes them to the rabbit queue.
-        /// 
-        /// This method does not await async calls not required for the return.
         /// </summary>
         /// <param name="steamId"></param>
         /// <param name="maxMatches"></param>
@@ -52,7 +50,7 @@ namespace FaceitMatchGatherer
             {
                 // Write new matches to database
                 _context.Matches.Add(new Match { FaceitMatchId = match.FaceitMatchId });
-                _context.SaveChangesAsync();
+                await _context.SaveChangesAsync();
 
                 // Create rabbit transfer model
                 var model = match.ToTransferModel();

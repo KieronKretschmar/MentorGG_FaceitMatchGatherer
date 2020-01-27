@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -20,7 +22,7 @@ using RabbitTransfer.TransferModels;
 namespace FaceitMatchGatherer
 {
     /// <summary>
-    /// 
+    ///
     /// Requires environment variables: ["MYSQL_CONNECTION_STRING", "AMQP_URI", "AMQP_FACEIT_QUEUE"]
     /// </summary>
     public class Startup
@@ -68,16 +70,22 @@ namespace FaceitMatchGatherer
                     });
             }
 
-            // Add Swagger for API documentation
-            services.AddSwaggerGen(c =>
+            #region Swagger
+            services.AddSwaggerGen(options =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo
-                {
-                    Title = "FaceitMatchGatherer API",
-                    Version = "v1"
-                });
-                
+                OpenApiInfo interface_info = new OpenApiInfo { Title = "FaceitMatchGatherer", Version = "v1", };
+                options.SwaggerDoc("v1", interface_info);
+
+                // Generate documentation based on the XML Comments provided.
+                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                options.IncludeXmlComments(xmlPath);
+
+                // Optionally, if installed, enable annotations
+                options.EnableAnnotations();
             });
+            #endregion
+
 
         }
 
@@ -104,7 +112,7 @@ namespace FaceitMatchGatherer
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Example API v1");
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "FaceitMatchGatherer");
             });
         }
     }

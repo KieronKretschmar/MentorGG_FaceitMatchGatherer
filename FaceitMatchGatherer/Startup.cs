@@ -67,16 +67,24 @@ namespace FaceitMatchGatherer
             services.AddSingleton<IFaceitOAuthCommunicator, FaceitOAuthCommunicator>();
             services.AddTransient<IFaceitMatchesWorker, FaceitMatchesWorker>();
 
+            #region RabbitMQ
+
+            var AMQP_URI = Configuration.GetValue<string>("AMQP_URI");
+            if (AMQP_URI == null)
+                throw new ArgumentException("AMQP_URI is missing, configure the `AMQP_URI` enviroment variable.");
+
+            var AMQP_FACEIT_QUEUE = Configuration.GetValue<string>("AMQP_FACEIT_QUEUE");
+            if (AMQP_FACEIT_QUEUE == null)
+                throw new ArgumentException("AMQP_FACEIT_QUEUE is missing, configure the `AMQP_FACEIT_QUEUE` enviroment variable.");
+
             // Create producer
-            var connection = new QueueConnection(
-                Configuration.GetValue<string>("AMQP_URI"),
-                Configuration.GetValue<string>("AMQP_FACEIT_QUEUE"));
+            var connection = new QueueConnection(AMQP_URI, AMQP_FACEIT_QUEUE);
 
             services.AddSingleton<IProducer<DemoEntryInstructions>>(sp =>
             {
                 return new Producer<DemoEntryInstructions>(connection);
             });
-
+            #endregion
 
             #region Swagger
             services.AddSwaggerGen(options =>
@@ -93,8 +101,6 @@ namespace FaceitMatchGatherer
                 options.EnableAnnotations();
             });
             #endregion
-
-
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

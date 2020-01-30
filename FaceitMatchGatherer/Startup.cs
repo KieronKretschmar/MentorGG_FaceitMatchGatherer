@@ -22,7 +22,6 @@ using RabbitTransfer.TransferModels;
 namespace FaceitMatchGatherer
 {
     /// <summary>
-    ///
     /// Requires environment variables: ["MYSQL_CONNECTION_STRING", "AMQP_URI", "AMQP_FACEIT_QUEUE"]
     /// </summary>
     public class Startup
@@ -55,6 +54,8 @@ namespace FaceitMatchGatherer
                 return new Producer<GathererTransferModel>(connection);
             });
 
+ 			#region database
+
             // if a connectionString is set use mysql, else use InMemory
             var connString = Configuration.GetValue<string>("MYSQL_CONNECTION_STRING");
             if (connString != null)
@@ -63,12 +64,20 @@ namespace FaceitMatchGatherer
             }
             else
             {
+                Console.WriteLine("WARNING: Using in memory database! Is `MYSQL_CONNECTION_STRING` set?");
                 services.AddEntityFrameworkInMemoryDatabase()
                     .AddDbContext<Database.FaceitContext>((sp, options) =>
                     {
                         options.UseInMemoryDatabase(databaseName: "MyInMemoryDatabase").UseInternalServiceProvider(sp);
                     });
             }
+
+            if (Configuration.GetValue<bool>("IS_MIGRATING"))
+            {
+                Console.WriteLine("WARNING: Migrating!");
+                return;
+            }
+			#endregion
 
             #region Swagger
             services.AddSwaggerGen(options =>

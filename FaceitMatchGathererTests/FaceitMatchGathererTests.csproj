@@ -18,7 +18,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Database\Database.csproj" />
     <ProjectReference Include="..\FaceitMatchGatherer\FaceitMatchGatherer.csproj" />
-    <ProjectReference Include="..\rabbitcommunicationlib\RabbitTransfer.csproj" />
+    <ProjectReference Include="..\rabbitcommunicationlib\RabbitCommunicationLib.csproj" />
   </ItemGroup>
 
 </Project>

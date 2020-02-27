@@ -2,8 +2,8 @@
 using Entities.Models;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using RabbitTransfer.Interfaces;
-using RabbitTransfer.TransferModels;
+using RabbitCommunicationLib.Interfaces;
+using RabbitCommunicationLib.TransferModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,9 +24,9 @@ namespace FaceitMatchGatherer
         private ILogger<FaceitMatchesWorker> _logger;
         private readonly FaceitContext _context;
         private readonly IFaceitApiCommunicator _apiCommunicator;
-        private readonly IProducer<GathererTransferModel> _rabbitProducer;
+        private readonly IProducer<DemoEntryInstructions> _rabbitProducer;
 
-        public FaceitMatchesWorker(ILogger<FaceitMatchesWorker> logger, FaceitContext context, IFaceitApiCommunicator apiCommunicator, IProducer<GathererTransferModel> rabbitProducer)
+        public FaceitMatchesWorker(ILogger<FaceitMatchesWorker> logger, FaceitContext context, IFaceitApiCommunicator apiCommunicator, IProducer<DemoEntryInstructions> rabbitProducer)
         {
             _logger = logger;
             _context = context;

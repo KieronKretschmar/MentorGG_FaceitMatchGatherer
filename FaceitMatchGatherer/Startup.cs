@@ -14,10 +14,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
-using RabbitTransfer.Interfaces;
-using RabbitTransfer.Producer;
-using RabbitTransfer.Queues;
-using RabbitTransfer.TransferModels;
+using RabbitCommunicationLib.Interfaces;
+using RabbitCommunicationLib.Producer;
+using RabbitCommunicationLib.Queues;
+using RabbitCommunicationLib.TransferModels;
 
 namespace FaceitMatchGatherer
 {
@@ -49,9 +49,9 @@ namespace FaceitMatchGatherer
                 Configuration.GetValue<string>("AMQP_URI"),
                 Configuration.GetValue<string>("AMQP_FACEIT_QUEUE"));
 
-            services.AddSingleton<IProducer<GathererTransferModel>>(sp =>
+            services.AddSingleton<IProducer<DemoEntryInstructions>>(sp =>
             {
-                return new Producer<GathererTransferModel>(connection);
+                return new Producer<DemoEntryInstructions>(connection);
             });
 
  			#region database

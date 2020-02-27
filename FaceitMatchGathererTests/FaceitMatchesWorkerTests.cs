@@ -5,8 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using RabbitTransfer.Interfaces;
-using RabbitTransfer.TransferModels;
+using RabbitCommunicationLib.Interfaces;
+using RabbitCommunicationLib.TransferModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -50,7 +50,7 @@ namespace FaceitMatchGathererTests
 
             // Setup mocks
             var mockFaceitOAuthCommunicator = new Mock<IFaceitOAuthCommunicator>();
-            var mockRabbitProducer = new Mock<IProducer<GathererTransferModel>>();
+            var mockRabbitProducer = new Mock<IProducer<DemoEntryInstructions>>();
             // Setup mockFaceitApiCommunicator such that GetPlayerMatches returns matches
             var mockFaceitApiCommunicator = new Mock<IFaceitApiCommunicator>();
             mockFaceitApiCommunicator
@@ -72,7 +72,7 @@ namespace FaceitMatchGathererTests
                 var allMatchesInDb = matches.All(x => context.Matches.Any(y => y.FaceitMatchId == x.FaceitMatchId));
                 Assert.IsTrue(allMatchesInDb);
 
-                mockRabbitProducer.Verify(x => x.PublishMessage(It.IsAny<string>(), It.IsAny<GathererTransferModel>()), Times.Exactly(matches.Count()));
+                mockRabbitProducer.Verify(x => x.PublishMessage(It.IsAny<string>(), It.IsAny<DemoEntryInstructions>()), Times.Exactly(matches.Count()));
             }
 
             // Call endpoint again, expecting no more matches to be added to happen
@@ -83,7 +83,7 @@ namespace FaceitMatchGathererTests
                 Assert.IsFalse(foundMatches);
 
                 // Verify that no more messages were published
-                mockRabbitProducer.Verify(x => x.PublishMessage(It.IsAny<string>(), It.IsAny<GathererTransferModel>()), Times.Exactly(matches.Count()));
+                mockRabbitProducer.Verify(x => x.PublishMessage(It.IsAny<string>(), It.IsAny<DemoEntryInstructions>()), Times.Exactly(matches.Count()));
             }
         }
     }

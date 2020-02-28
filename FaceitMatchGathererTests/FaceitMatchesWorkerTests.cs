@@ -10,6 +10,7 @@ using RabbitCommunicationLib.TransferModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using FaceitMatchGatherer.Enums;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -61,7 +62,7 @@ namespace FaceitMatchGathererTests
             using (var context = new FaceitContext(options))
             {
                 var faceitMatchesWorker = new FaceitMatchesWorker(serviceProvider.GetService<ILogger<FaceitMatchesWorker>>(), context, mockFaceitApiCommunicator.Object, mockRabbitProducer.Object);
-                var foundMatches = await faceitMatchesWorker.WorkUser(steamId, maxMatches, maxAgeInDays);
+                var foundMatches = await faceitMatchesWorker.WorkUser(steamId, maxMatches, maxAgeInDays, UserSubscription.Ultimate);
 
                 Assert.IsTrue(foundMatches);
             }
@@ -79,7 +80,7 @@ namespace FaceitMatchGathererTests
             using (var context = new FaceitContext(options))
             {
                 var faceitMatchesWorker = new FaceitMatchesWorker(serviceProvider.GetService<ILogger<FaceitMatchesWorker>>(), context, mockFaceitApiCommunicator.Object, mockRabbitProducer.Object);
-                var foundMatches = await faceitMatchesWorker.WorkUser(steamId, 20, 60);
+                var foundMatches = await faceitMatchesWorker.WorkUser(steamId, 20, 60,UserSubscription.Ultimate);
                 Assert.IsFalse(foundMatches);
 
                 // Verify that no more messages were published

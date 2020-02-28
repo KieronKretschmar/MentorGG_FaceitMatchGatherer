@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
+using RabbitCommunicationLib.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;

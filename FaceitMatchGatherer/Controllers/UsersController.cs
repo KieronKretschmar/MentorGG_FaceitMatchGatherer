@@ -10,6 +10,7 @@ using Entities.Models;
 using System.IdentityModel.Tokens.Jwt;
 using static Entities.Enumerals;
 using Microsoft.Extensions.Logging;
+using FaceitMatchGatherer.Enums;
 
 namespace FaceitMatchGatherer.Controllers
 {
@@ -128,9 +129,9 @@ namespace FaceitMatchGatherer.Controllers
         /// <param name="steamId"></param>
         /// <returns></returns>
         [HttpPost("{steamId}/look-for-matches")]
-        public async Task<ActionResult<bool>> LookForMatches(long steamId)
+        public async Task<ActionResult<bool>> LookForMatches(long steamId, UserSubscription userSubscription )
         {
-            return await _faceitMatchesWorker.WorkUser(steamId, 20, 60);
+            return await _faceitMatchesWorker.WorkUser(steamId, 20, 60, userSubscription);
         }
 
         private bool UserExists(string id)

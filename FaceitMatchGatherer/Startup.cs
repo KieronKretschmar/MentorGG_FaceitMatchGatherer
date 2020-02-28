@@ -39,21 +39,6 @@ namespace FaceitMatchGatherer
             services.AddControllers();
             services.AddLogging(x => x.AddConsole().AddDebug());
 
-            services.AddSingleton<IFaceitApiCommunicator, FaceitApiCommunicator>();
-            services.AddSingleton<IFaceitOAuthCommunicator, FaceitOAuthCommunicator>();
-            services.AddTransient<IFaceitMatchesWorker, FaceitMatchesWorker>();
-
-
-            // Create producer
-            var connection = new QueueConnection(
-                Configuration.GetValue<string>("AMQP_URI"),
-                Configuration.GetValue<string>("AMQP_FACEIT_QUEUE"));
-
-            services.AddSingleton<IProducer<DemoEntryInstructions>>(sp =>
-            {
-                return new Producer<DemoEntryInstructions>(connection);
-            });
-
  			#region database
 
             // if a connectionString is set use mysql, else use InMemory
@@ -65,19 +50,33 @@ namespace FaceitMatchGatherer
             else
             {
                 Console.WriteLine("WARNING: Using in memory database! Is `MYSQL_CONNECTION_STRING` set?");
-                services.AddEntityFrameworkInMemoryDatabase()
-                    .AddDbContext<Database.FaceitContext>((sp, options) =>
+                services.AddDbContext<Database.FaceitContext>( options =>
                     {
-                        options.UseInMemoryDatabase(databaseName: "MyInMemoryDatabase").UseInternalServiceProvider(sp);
+                        options.UseInMemoryDatabase(databaseName: "MyInMemoryDatabase");
                     });
             }
+			#endregion
 
             if (Configuration.GetValue<bool>("IS_MIGRATING"))
             {
                 Console.WriteLine("WARNING: Migrating!");
                 return;
             }
-			#endregion
+
+            services.AddSingleton<IFaceitApiCommunicator, FaceitApiCommunicator>();
+            services.AddSingleton<IFaceitOAuthCommunicator, FaceitOAuthCommunicator>();
+            services.AddTransient<IFaceitMatchesWorker, FaceitMatchesWorker>();
+
+            // Create producer
+            var connection = new QueueConnection(
+                Configuration.GetValue<string>("AMQP_URI"),
+                Configuration.GetValue<string>("AMQP_FACEIT_QUEUE"));
+
+            services.AddSingleton<IProducer<DemoEntryInstructions>>(sp =>
+            {
+                return new Producer<DemoEntryInstructions>(connection);
+            });
+
 
             #region Swagger
             services.AddSwaggerGen(options =>

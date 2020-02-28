@@ -48,12 +48,23 @@ namespace FaceitMatchGatherer
             var requestedQuality = QualityPerSubscription.Qualities[userSubscription];
 
             // Get new matches
-            var matches = await GetNewMatches(steamId, maxMatches, maxAgeInDays,requestedQuality);
+            var matches = await GetNewMatches(steamId, maxMatches, maxAgeInDays, requestedQuality);
 
             foreach (var match in matches)
             {
-                // Write new matches to database
-                _context.Matches.Add(new Match { FaceitMatchId = match.FaceitMatchId });
+                var demoInDb = _context.Matches.SingleOrDefault(x => x.FaceitMatchId == match.FaceitMatchId);
+
+                //TODO make a pretty upsert
+                if (demoInDb == null)
+                    _context.Matches.Add(new Match
+                    {
+                        FaceitMatchId = match.FaceitMatchId,
+                        AnalyzedQuality = requestedQuality
+                    });
+                else
+                    demoInDb.AnalyzedQuality = requestedQuality;
+               
+
                 await _context.SaveChangesAsync();
 
                 // Create rabbit transfer model
@@ -86,9 +97,9 @@ namespace FaceitMatchGatherer
             }
 
 
-            // Remove matches already in db with higher quality
+            // Remove matches already in db with higher or equal quality
             var knownMatchIds = _context.Matches
-                .Where(x => recentMatches.Select(y => y.FaceitMatchId).Contains(x.FaceitMatchId)).Where(y => y.AnalyzedQuality > requestedQuality)
+                .Where(x => recentMatches.Select(y => y.FaceitMatchId).Contains(x.FaceitMatchId)).Where(y => y.AnalyzedQuality >= requestedQuality)
                 .Select(x => x.FaceitMatchId);
             var newMatches = recentMatches.Where(x => !knownMatchIds.Contains(x.FaceitMatchId))
                 .ToList();

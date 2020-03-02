@@ -15,7 +15,7 @@ namespace FaceitMatchGatherer.Enums
         Premium = 2,
         Ultimate = 3,
     }
-    //TODO Keep in sync with DemoCentrals Usersubscription 
+    //Keep in sync with DemoCentrals Usersubscription 
     public static class QualityPerSubscription
     {
         public static Dictionary<UserSubscription, AnalyzerQuality> Qualities =

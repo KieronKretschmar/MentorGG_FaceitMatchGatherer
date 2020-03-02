@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FaceitMatchGatherer.Enums
 {
-    //TODO Keep in sync with DemoCentrals Usersubscription enum
+    //Keep in sync with DemoCentrals Usersubscription enum
     public enum UserSubscription
     {
         

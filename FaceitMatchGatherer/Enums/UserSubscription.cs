@@ -9,8 +9,6 @@ namespace FaceitMatchGatherer.Enums
     //Keep in sync with DemoCentrals Usersubscription enum
     public enum UserSubscription
     {
-        
-
         Free = 1,
         Premium = 2,
         Ultimate = 3,

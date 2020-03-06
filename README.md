@@ -1,21 +1,6 @@
 # FaceitMatchGatherer
 Polls the Faceit API for new demos of users.
 
-## HTTP Routes
-
-### GET `/users/<steamId>`
-Gets the database entry of the Faceit user with the given steamId.
-
-### POST `/users/<steamId>`
-Create a new Faceit user 
-
-### DELETE `/users/<steamId>`
-Removes User from database.
-
-### POST `/users/<steamId>/look-for-matches`
-Triggers calls to the Faceit API to find new matches of the specified user, and initiates the process of analyzing them.
-
-
 ## Enviroment Variables
 
 - `FACEIT_OAUTH_CLIENT_SECRET` : 

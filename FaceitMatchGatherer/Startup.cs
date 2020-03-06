@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Database;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -112,7 +113,7 @@ namespace FaceitMatchGatherer
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider services)
         {
             if (env.IsDevelopment())
             {
@@ -130,12 +131,21 @@ namespace FaceitMatchGatherer
                 endpoints.MapControllers();
             });
 
+            #region Swagger
             // Add Swagger for API documentation
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "FaceitMatchGatherer");
             });
+            #endregion
+
+            // migrate if this is not an inmemory database
+            if (services.GetRequiredService<FaceitContext>().Database.ProviderName != "Microsoft.EntityFrameworkCore.InMemory")
+            {
+                services.GetRequiredService<FaceitContext>().Database.Migrate();
+            }
+
         }
     }
 }

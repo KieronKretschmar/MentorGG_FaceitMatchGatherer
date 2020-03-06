@@ -1,7 +1,7 @@
 # FaceitMatchGatherer
 Polls the Faceit API for new demos of users.
 
-## Enviroment Variables
+## Environment Variables
 
 - `FACEIT_OAUTH_CLIENT_SECRET` : 
 Required for [Faceit's OAuth2](https://developers-support.faceit.com/hc/en-us/articles/115001594504-FACEIT-Connect-Documentation) Authorization Code Flow [*]
@@ -16,3 +16,6 @@ Required for communication with [Faceit's Data API](https://developers.faceit.co
 - `AMQP_FACEIT_QUEUE` : Rabbit queue's name for producing messages to DemoCentral [*]
 
 [*] *Required*
+
+## Additional Information
+- Upon Startup, this project runs migrations on its database.

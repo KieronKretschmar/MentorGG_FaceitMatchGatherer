@@ -37,9 +37,17 @@ namespace FaceitMatchGatherer
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-            services.AddLogging(x => x.AddConsole().AddDebug());
 
- 			#region database
+            services.AddLogging(services =>
+            {
+                services.AddConsole(o =>
+                {
+                    o.TimestampFormat = "[yyyy-MM-dd HH:mm:ss zzz] ";
+                });
+                services.AddDebug();
+            });
+
+            #region database
 
             // if a connectionString is set use mysql, else use InMemory
             var connString = Configuration.GetValue<string>("MYSQL_CONNECTION_STRING");

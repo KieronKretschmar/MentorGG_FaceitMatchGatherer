@@ -1,0 +1,38 @@
+image: docker:stable
+
+variables:
+  GIT_SUBMODULE_STRATEGY: normal
+
+stages:
+    - release
+
+release:
+
+    # ENVIRONMENT REQUIREMENTS IN GITLAB CI SETTINGS
+    # ACR_HOST - Hostname of the Azure container registry
+    # ACR_USER - User to authenticate with the registry
+    # ACR_PASSWORD - Password to authenticate with the registry
+
+    stage: release
+    only:
+        - /^release-.*$/
+
+    # Select Docker in Docker for Gitlab Shared Runners
+    services:
+        - docker:dind
+
+    before_script:
+        - docker info
+
+    script:
+        # Split the release tag into the semantic version number
+        # eg. from `release-1.2.3` to `1.2.3`
+        - SEMVER=$(echo $CI_COMMIT_TAG | cut -d "-" -f2)
+        # Combine variables to the final image tag
+        - IMAGE_TAG=$ACR_HOST/$CI_PROJECT_NAME:$SEMVER
+        # Build the image
+        - docker build --tag $IMAGE_TAG .
+        # Login to the ACR container registry
+        - docker login $ACR_HOST -u $ACR_USER -p $ACR_PASSWORD
+        # Push the image
+        - docker push $IMAGE_TAG

@@ -70,6 +70,8 @@ namespace FaceitMatchGatherer
                 // Create rabbit transfer model
                 var model = match.ToTransferModel();
 
+                _logger.LogInformation($"Publishing model with DownloadUrl [ {match.DownloadUrl} ] from uploader#{match.UploaderId} to queue.");
+
                 // Publish to rabbit queue
                 _rabbitProducer.PublishMessage(model);
             }

@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI
 - Automatically run migrations on Startup.
 
-###Changed
+### Changed
 - Logging with correct timestamp
 - Dockerfile
 - Startup throws exceptions on missing env vars

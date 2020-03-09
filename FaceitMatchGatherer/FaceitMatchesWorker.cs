@@ -25,9 +25,9 @@ namespace FaceitMatchGatherer
         private ILogger<FaceitMatchesWorker> _logger;
         private readonly FaceitContext _context;
         private readonly IFaceitApiCommunicator _apiCommunicator;
-        private readonly IProducer<DemoEntryInstructions> _rabbitProducer;
+        private readonly IProducer<DemoInsertInstruction> _rabbitProducer;
 
-        public FaceitMatchesWorker(ILogger<FaceitMatchesWorker> logger, FaceitContext context, IFaceitApiCommunicator apiCommunicator, IProducer<DemoEntryInstructions> rabbitProducer)
+        public FaceitMatchesWorker(ILogger<FaceitMatchesWorker> logger, FaceitContext context, IFaceitApiCommunicator apiCommunicator, IProducer<DemoInsertInstruction> rabbitProducer)
         {
             _logger = logger;
             _context = context;
@@ -71,7 +71,7 @@ namespace FaceitMatchGatherer
                 var model = match.ToTransferModel();
 
                 // Publish to rabbit queue
-                _rabbitProducer.PublishMessage(new Guid().ToString(), model);
+                _rabbitProducer.PublishMessage(model);
             }
 
             var matchesFound = matches.Any();

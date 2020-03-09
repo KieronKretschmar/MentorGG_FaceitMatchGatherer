@@ -89,9 +89,9 @@ namespace FaceitMatchGatherer
             // Create producer
             var connection = new QueueConnection(AMQP_URI, AMQP_FACEIT_QUEUE);
 
-            services.AddSingleton<IProducer<DemoEntryInstructions>>(sp =>
+            services.AddSingleton<IProducer<DemoInsertInstruction>>(sp =>
             {
-                return new Producer<DemoEntryInstructions>(connection);
+                return new Producer<DemoInsertInstruction>(connection);
             });
             #endregion
 

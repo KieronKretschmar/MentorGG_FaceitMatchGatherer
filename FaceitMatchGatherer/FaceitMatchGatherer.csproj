@@ -22,8 +22,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Database\Database.csproj" />
     <ProjectReference Include="..\Entities\Entities.csproj" />
-    <ProjectReference Include="..\rabbitcommunicationlib\RabbitCommunicationLib.csproj" />
-    <ProjectReference Include="..\rabbitcommunicationlib\RabbitCommunicationLib.csproj" />
+    <ProjectReference Include="..\RabbitCommunicationLib\RabbitCommunicationLib.csproj" />
+    <ProjectReference Include="..\RabbitCommunicationLib\RabbitCommunicationLib.csproj" />
   </ItemGroup>
 
 </Project>

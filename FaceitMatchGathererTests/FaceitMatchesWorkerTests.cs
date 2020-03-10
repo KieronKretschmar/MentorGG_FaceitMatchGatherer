@@ -52,7 +52,7 @@ namespace FaceitMatchGathererTests
 
             // Setup mocks
             var mockFaceitOAuthCommunicator = new Mock<IFaceitOAuthCommunicator>();
-            var mockRabbitProducer = new Mock<IProducer<DemoEntryInstructions>>();
+            var mockRabbitProducer = new Mock<IProducer<DemoInsertInstruction>>();
             // Setup mockFaceitApiCommunicator such that GetPlayerMatches returns matches
             var mockFaceitApiCommunicator = new Mock<IFaceitApiCommunicator>();
             mockFaceitApiCommunicator
@@ -74,7 +74,7 @@ namespace FaceitMatchGathererTests
                 var allMatchesInDb = matches.All(x => context.Matches.Any(y => y.FaceitMatchId == x.FaceitMatchId));
                 Assert.IsTrue(allMatchesInDb);
 
-                mockRabbitProducer.Verify(x => x.PublishMessage(It.IsAny<string>(), It.IsAny<DemoEntryInstructions>()), Times.Exactly(matches.Count()));
+                mockRabbitProducer.Verify(x => x.PublishMessage(It.IsAny<DemoInsertInstruction>(), It.IsAny<string>()), Times.Exactly(matches.Count()));
             }
 
             // Call endpoint again, expecting no more matches to be added to happen
@@ -85,7 +85,7 @@ namespace FaceitMatchGathererTests
                 Assert.IsFalse(foundMatches);
 
                 // Verify that no more messages were published
-                mockRabbitProducer.Verify(x => x.PublishMessage(It.IsAny<string>(), It.IsAny<DemoEntryInstructions>()), Times.Exactly(matches.Count()));
+                mockRabbitProducer.Verify(x => x.PublishMessage( It.IsAny<DemoInsertInstruction>(),It.IsAny<string>()), Times.Exactly(matches.Count()));
             }
         }
 
@@ -112,7 +112,7 @@ namespace FaceitMatchGathererTests
                 mockFaceitAPI.Setup(x => x.GetPlayerMatches(testSteamId, It.IsAny<int>(), It.IsAny<int>())).Returns(Task.FromResult<IEnumerable<FaceitMatchData>>(new List<FaceitMatchData> { testFaceitMatch }));
                 mockFaceitAPI.Setup(x => x.GetDemoUrl(It.IsAny<string>())).Returns(Task.FromResult("testDownloadUrl"));
 
-                var mockRabbit = new Mock<IProducer<DemoEntryInstructions>>();
+                var mockRabbit = new Mock<IProducer<DemoInsertInstruction>>();
 
                 var test = new FaceitMatchesWorker(serviceProvider.GetRequiredService<ILogger<FaceitMatchesWorker>>(), context, mockFaceitAPI.Object, mockRabbit.Object);
 
@@ -152,7 +152,7 @@ namespace FaceitMatchGathererTests
                 mockFaceitAPI.Setup(x => x.GetPlayerMatches(testSteamId, It.IsAny<int>(), It.IsAny<int>())).Returns(Task.FromResult<IEnumerable<FaceitMatchData>>(new List<FaceitMatchData> { testFaceitMatch }));
                 mockFaceitAPI.Setup(x => x.GetDemoUrl(It.IsAny<string>())).Returns(Task.FromResult("testDownloadUrl"));
 
-                var mockRabbit = new Mock<IProducer<DemoEntryInstructions>>();
+                var mockRabbit = new Mock<IProducer<DemoInsertInstruction>>();
 
                 var test = new FaceitMatchesWorker(serviceProvider.GetRequiredService<ILogger<FaceitMatchesWorker>>(), context, mockFaceitAPI.Object, mockRabbit.Object);
 

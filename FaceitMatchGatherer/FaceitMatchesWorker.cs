@@ -25,9 +25,9 @@ namespace FaceitMatchGatherer
         private ILogger<FaceitMatchesWorker> _logger;
         private readonly FaceitContext _context;
         private readonly IFaceitApiCommunicator _apiCommunicator;
-        private readonly IProducer<DemoEntryInstructions> _rabbitProducer;
+        private readonly IProducer<DemoInsertInstruction> _rabbitProducer;
 
-        public FaceitMatchesWorker(ILogger<FaceitMatchesWorker> logger, FaceitContext context, IFaceitApiCommunicator apiCommunicator, IProducer<DemoEntryInstructions> rabbitProducer)
+        public FaceitMatchesWorker(ILogger<FaceitMatchesWorker> logger, FaceitContext context, IFaceitApiCommunicator apiCommunicator, IProducer<DemoInsertInstruction> rabbitProducer)
         {
             _logger = logger;
             _context = context;
@@ -70,8 +70,10 @@ namespace FaceitMatchGatherer
                 // Create rabbit transfer model
                 var model = match.ToTransferModel();
 
+                _logger.LogInformation($"Publishing model with DownloadUrl [ {match.DownloadUrl} ] from uploader#{match.UploaderId} to queue.");
+
                 // Publish to rabbit queue
-                _rabbitProducer.PublishMessage(new Guid().ToString(), model);
+                _rabbitProducer.PublishMessage(model);
             }
 
             var matchesFound = matches.Any();

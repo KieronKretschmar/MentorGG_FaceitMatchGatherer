@@ -6,8 +6,8 @@ WORKDIR /app
 
 # Copy csproj and restore as distinct layers
 
-WORKDIR /app/rabbitcommunicationlib
-COPY ./rabbitcommunicationlib ./
+WORKDIR /app/RabbitCommunicationLib
+COPY ./RabbitCommunicationLib ./
 RUN dotnet restore
 
 WORKDIR /app/Entities
@@ -27,7 +27,7 @@ WORKDIR /app
 COPY ./FaceitMatchGatherer/ ./FaceitMatchGatherer
 COPY ./Database/ ./Database
 COPY ./Entities ./Entities
-COPY ./rabbitcommunicationlib ./rabbitcommunicationlib
+COPY ./RabbitCommunicationLib ./RabbitCommunicationLib
 
 RUN dotnet publish FaceitMatchGatherer/ -c Release -o out
 

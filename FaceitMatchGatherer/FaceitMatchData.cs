@@ -34,9 +34,9 @@ namespace FaceitMatchGatherer
             FinishedAt = origin.AddSeconds(long.Parse(finishedDateString));
         }
 
-        public DemoEntryInstructions ToTransferModel()
+        public DemoInsertInstruction ToTransferModel()
         {
-            var model = new DemoEntryInstructions
+            var model = new DemoInsertInstruction
             {
                 DownloadUrl = DownloadUrl,
                 MatchDate = StartedAt,

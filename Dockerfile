@@ -7,7 +7,7 @@ WORKDIR /app
 # Copy csproj and restore as distinct layers
 
 WORKDIR /app/RabbitCommunicationLib
-COPY ./RabbitCommunicationLib ./
+COPY ./RabbitCommunicationLib/*.csproj ./
 RUN dotnet restore
 
 WORKDIR /app/Entities

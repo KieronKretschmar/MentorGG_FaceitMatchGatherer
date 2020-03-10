@@ -10,6 +10,7 @@ using Entities.Models;
 using System.IdentityModel.Tokens.Jwt;
 using static Entities.Enumerals;
 using Microsoft.Extensions.Logging;
+using FaceitMatchGatherer.Enums;
 
 namespace FaceitMatchGatherer.Controllers
 {
@@ -34,8 +35,6 @@ namespace FaceitMatchGatherer.Controllers
 
         /// <summary>
         /// Gets the database entry of the Faceit user with the given steamId.
-        ///
-        /// GET: users/<steamId>
         /// </summary>
         /// <param name="steamId"></param>
         /// <returns></returns>
@@ -53,9 +52,7 @@ namespace FaceitMatchGatherer.Controllers
         }
 
         /// <summary>
-        /// Endpoint for creating a new Faceit user. Has to be used as callback for Faceit's OAuth JS library.
-        ///
-        /// POST: users/<steamId>
+        /// Adds user to database and thereby enables faceit automatic-upload for him.
         /// </summary>
         /// <param name="steamId"></param>
         /// <param name="code">Authorization code provided by Faceit OAuth implementation.</param>
@@ -98,9 +95,7 @@ namespace FaceitMatchGatherer.Controllers
         }
 
         /// <summary>
-        /// Removes User from database.
-        ///
-        /// DELETE: /users/<steamId>
+        /// Removes User from database and thereby disables faceit automatic upload.
         /// </summary>
         /// <param name="steamId"></param>
         /// <returns></returns>
@@ -122,15 +117,13 @@ namespace FaceitMatchGatherer.Controllers
 
         /// <summary>
         /// Triggers calls to the Faceit API to find new matches of the specified user, and initiates the process of analyzing them.
-        ///
-        /// POST /users/<steamId>/look-for-matches
         /// </summary>
         /// <param name="steamId"></param>
         /// <returns></returns>
         [HttpPost("{steamId}/look-for-matches")]
-        public async Task<ActionResult<bool>> LookForMatches(long steamId)
+        public async Task<ActionResult<bool>> LookForMatches(long steamId, UserSubscription userSubscription )
         {
-            return await _faceitMatchesWorker.WorkUser(steamId, 20, 60);
+            return await _faceitMatchesWorker.WorkUser(steamId, 20, 60, userSubscription);
         }
 
         private bool UserExists(string id)

@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
-using RabbitTransfer.Enums;
-using RabbitTransfer.TransferModels;
+using RabbitCommunicationLib.Enums;
+using RabbitCommunicationLib.TransferModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,9 +34,9 @@ namespace FaceitMatchGatherer
             FinishedAt = origin.AddSeconds(long.Parse(finishedDateString));
         }
 
-        public GathererTransferModel ToTransferModel()
+        public DemoInsertInstruction ToTransferModel()
         {
-            var model = new GathererTransferModel
+            var model = new DemoInsertInstruction
             {
                 DownloadUrl = DownloadUrl,
                 MatchDate = StartedAt,

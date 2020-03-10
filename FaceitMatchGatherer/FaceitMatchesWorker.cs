@@ -2,8 +2,9 @@
 using Entities.Models;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using RabbitTransfer.Interfaces;
-using RabbitTransfer.TransferModels;
+using RabbitCommunicationLib.Interfaces;
+using RabbitCommunicationLib.TransferModels;
+using FaceitMatchGatherer.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +14,7 @@ namespace FaceitMatchGatherer
 {
     public interface IFaceitMatchesWorker
     {
-        Task<bool> WorkUser(long steamId, int maxMatches, int maxAgeInDays);
+        Task<bool> WorkUser(long steamId, int maxMatches, int maxAgeInDays, UserSubscription userSubscription);
     }
 
     /// <summary>
@@ -24,9 +25,9 @@ namespace FaceitMatchGatherer
         private ILogger<FaceitMatchesWorker> _logger;
         private readonly FaceitContext _context;
         private readonly IFaceitApiCommunicator _apiCommunicator;
-        private readonly IProducer<GathererTransferModel> _rabbitProducer;
+        private readonly IProducer<DemoInsertInstruction> _rabbitProducer;
 
-        public FaceitMatchesWorker(ILogger<FaceitMatchesWorker> logger, FaceitContext context, IFaceitApiCommunicator apiCommunicator, IProducer<GathererTransferModel> rabbitProducer)
+        public FaceitMatchesWorker(ILogger<FaceitMatchesWorker> logger, FaceitContext context, IFaceitApiCommunicator apiCommunicator, IProducer<DemoInsertInstruction> rabbitProducer)
         {
             _logger = logger;
             _context = context;
@@ -41,22 +42,38 @@ namespace FaceitMatchGatherer
         /// <param name="maxMatches"></param>
         /// <param name="maxAgeInDays"></param>
         /// <returns>bool, whether a new match was found</returns>
-        public async Task<bool> WorkUser(long steamId, int maxMatches, int maxAgeInDays)
+        public async Task<bool> WorkUser(long steamId, int maxMatches, int maxAgeInDays, UserSubscription userSubscription)
         {
+
+            var requestedQuality = QualityPerSubscription.Qualities[userSubscription];
+
             // Get new matches
-            var matches = await GetNewMatches(steamId, maxMatches, maxAgeInDays);
+            var matches = await GetNewMatches(steamId, maxMatches, maxAgeInDays, requestedQuality);
 
             foreach (var match in matches)
             {
-                // Write new matches to database
-                _context.Matches.Add(new Match { FaceitMatchId = match.FaceitMatchId });
+                var demoInDb = _context.Matches.SingleOrDefault(x => x.FaceitMatchId == match.FaceitMatchId);
+
+                //TODO make a pretty upsert
+                if (demoInDb == null)
+                    _context.Matches.Add(new Match
+                    {
+                        FaceitMatchId = match.FaceitMatchId,
+                        AnalyzedQuality = requestedQuality
+                    });
+                else
+                    demoInDb.AnalyzedQuality = requestedQuality;
+               
+
                 await _context.SaveChangesAsync();
 
                 // Create rabbit transfer model
                 var model = match.ToTransferModel();
 
+                _logger.LogInformation($"Publishing model with DownloadUrl [ {match.DownloadUrl} ] from uploader#{match.UploaderId} to queue.");
+
                 // Publish to rabbit queue
-                _rabbitProducer.PublishMessage(new Guid().ToString(), model);
+                _rabbitProducer.PublishMessage(model);
             }
 
             var matchesFound = matches.Any();
@@ -64,7 +81,7 @@ namespace FaceitMatchGatherer
             return matchesFound;
         }
 
-        private async Task<List<FaceitMatchData>> GetNewMatches(long steamId, int maxMatches, int maxAgeInDays)
+        private async Task<List<FaceitMatchData>> GetNewMatches(long steamId, int maxMatches, int maxAgeInDays, RabbitCommunicationLib.Enums.AnalyzerQuality requestedQuality)
         {
             IEnumerable<FaceitMatchData> recentMatches;
             try
@@ -82,9 +99,9 @@ namespace FaceitMatchGatherer
             }
 
 
-            // Remove matches already in db
+            // Remove matches already in db with higher or equal quality
             var knownMatchIds = _context.Matches
-                .Where(x => recentMatches.Select(y => y.FaceitMatchId).Contains(x.FaceitMatchId))
+                .Where(x => recentMatches.Select(y => y.FaceitMatchId).Contains(x.FaceitMatchId)).Where(y => y.AnalyzedQuality >= requestedQuality)
                 .Select(x => x.FaceitMatchId);
             var newMatches = recentMatches.Where(x => !knownMatchIds.Contains(x.FaceitMatchId))
                 .ToList();

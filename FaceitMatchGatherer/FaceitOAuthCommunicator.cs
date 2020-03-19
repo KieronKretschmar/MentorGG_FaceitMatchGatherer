@@ -35,7 +35,7 @@ namespace FaceitMatchGatherer
         {
             clientId = configuration.GetValue<string>("FACEIT_OAUTH_CLIENT_ID");
             clientSecret = configuration.GetValue<string>("FACEIT_OAUTH_CLIENT_SECRET");
-            tokenEndpoint = configuration.GetValue<string>("FACEIT_OAUTH_TOKEN_ENDPOINT");
+            tokenEndpoint = configuration.GetValue<string>("FACEIT_OAUTH_TOKEN_ENDPOINT") ?? "https://api.faceit.com/auth/v1/oauth/token";
         }
 
         public async Task<User> CreateUser(long steamId, string code)

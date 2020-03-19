@@ -76,6 +76,11 @@ namespace FaceitMatchGatherer
                 _rabbitProducer.PublishMessage(model);
             }
 
+            // Update user.LastChecked
+            var user = await _context.Users.FindAsync(steamId);
+            user.LastChecked = DateTime.Now;
+            await _context.SaveChangesAsync();
+
             var matchesFound = matches.Any();
 
             return matchesFound;

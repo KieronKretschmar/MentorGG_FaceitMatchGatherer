@@ -60,6 +60,8 @@ namespace FaceitMatchGatherer.Controllers
         [HttpPost("{steamId}")]
         public async Task<ActionResult> CreateUser(long steamId, string code)
         {
+            _logger.LogInformation($"CreateUser called with steamId [ {steamId} ] and code [ {code} ]");
+
             // Query faceit for more data about user
             User user;
             try
@@ -76,16 +78,20 @@ namespace FaceitMatchGatherer.Controllers
             var faceitSteamId = await _faceitApiCommunicator.GetSteamId(user.FaceitName);
             if (faceitSteamId != user.SteamId)
             {
-                return BadRequest();
+                var msg = $"Faceit and Steam Account don't match. SteamId of the logged in user: {user.SteamId}. SteamId of the Faceit account: {faceitSteamId}";
+                _logger.LogWarning(msg);
+                return BadRequest(msg);
             }
 
             // Modify user if he already exists, Add if he is new
             if (_context.Users.Any(x => x.SteamId == steamId))
             {
+                _logger.LogInformation($"User with steamId [ {steamId} ] already exists. Updating entry.");
                 _context.Entry(user).State = EntityState.Modified;
             }
             else
             {
+                _logger.LogInformation($"Created new User with steamId [ {steamId} ].");
                 _context.Entry(user).State = EntityState.Added;
             }
 
@@ -102,15 +108,18 @@ namespace FaceitMatchGatherer.Controllers
         [HttpDelete("{steamId}")]
         public async Task<ActionResult> DeleteUser(long steamId)
         {
+            _logger.LogInformation($"DeleteUser called with steamId [ {steamId} ]");
             var user = await _context.Users.FindAsync(steamId);
             if (user == null)
             {
-
+                _logger.LogInformation($"User not found for deletion with steamId [ {steamId} ]");
                 return NotFound();
             }
 
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
+
+            _logger.LogInformation($"Removed user with steamId [ {steamId} ]");
 
             return Ok();
         }
@@ -123,6 +132,7 @@ namespace FaceitMatchGatherer.Controllers
         [HttpPost("{steamId}/look-for-matches")]
         public async Task<ActionResult<bool>> LookForMatches(long steamId, UserSubscription userSubscription )
         {
+            _logger.LogInformation($"LookForMatches called with steamId [ {steamId} ]");
             return await _faceitMatchesWorker.WorkUser(steamId, 20, 60, userSubscription);
         }
 

@@ -78,7 +78,7 @@ namespace FaceitMatchGatherer.Controllers
             var faceitSteamId = await _faceitApiCommunicator.GetSteamId(user.FaceitName);
             if (faceitSteamId != user.SteamId)
             {
-                var msg = $"Faceit and Steam Account don't match. SteamId of the logged in user: {user.SteamId}. SteamId of the Faceit account: {faceitSteamId}";
+                var msg = $"Faceit and Steam Account don't match. SteamId of the logged in user: [ {user.SteamId} ]. SteamId of the Faceit account: [ {faceitSteamId} ]";
                 _logger.LogWarning(msg);
                 return BadRequest(msg);
             }

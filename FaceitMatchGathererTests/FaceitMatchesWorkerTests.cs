@@ -10,7 +10,6 @@ using RabbitCommunicationLib.TransferModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using FaceitMatchGatherer.Enums;
 using System.Text;
 using System.Threading.Tasks;
 using RabbitCommunicationLib.Enums;
@@ -63,7 +62,7 @@ namespace FaceitMatchGathererTests
             using (var context = new FaceitContext(options))
             {
                 var faceitMatchesWorker = new FaceitMatchesWorker(serviceProvider.GetService<ILogger<FaceitMatchesWorker>>(), context, mockFaceitApiCommunicator.Object, mockRabbitProducer.Object);
-                var foundMatches = await faceitMatchesWorker.WorkUser(steamId, maxMatches, maxAgeInDays, UserSubscription.Ultimate);
+                var foundMatches = await faceitMatchesWorker.WorkUser(steamId, maxMatches, maxAgeInDays, AnalyzerQuality.High);
 
                 Assert.IsTrue(foundMatches);
             }
@@ -81,7 +80,7 @@ namespace FaceitMatchGathererTests
             using (var context = new FaceitContext(options))
             {
                 var faceitMatchesWorker = new FaceitMatchesWorker(serviceProvider.GetService<ILogger<FaceitMatchesWorker>>(), context, mockFaceitApiCommunicator.Object, mockRabbitProducer.Object);
-                var foundMatches = await faceitMatchesWorker.WorkUser(steamId, 20, 60, UserSubscription.Ultimate);
+                var foundMatches = await faceitMatchesWorker.WorkUser(steamId, 20, 60, AnalyzerQuality.High);
                 Assert.IsFalse(foundMatches);
 
                 // Verify that no more messages were published
@@ -116,9 +115,9 @@ namespace FaceitMatchGathererTests
 
                 var test = new FaceitMatchesWorker(serviceProvider.GetRequiredService<ILogger<FaceitMatchesWorker>>(), context, mockFaceitAPI.Object, mockRabbit.Object);
 
-                firstMatchCheck = await test.WorkUser(testSteamId, 5, 5, UserSubscription.Ultimate);
+                firstMatchCheck = await test.WorkUser(testSteamId, 5, 5, AnalyzerQuality.High);
 
-                secondMatchCheck = await test.WorkUser(testSteamId, 5, 5, UserSubscription.Free);
+                secondMatchCheck = await test.WorkUser(testSteamId, 5, 5, AnalyzerQuality.Low);
             }
 
             using (var context = new FaceitContext(testOptions))
@@ -156,9 +155,9 @@ namespace FaceitMatchGathererTests
 
                 var test = new FaceitMatchesWorker(serviceProvider.GetRequiredService<ILogger<FaceitMatchesWorker>>(), context, mockFaceitAPI.Object, mockRabbit.Object);
 
-                firstMatchCheck = await test.WorkUser(testSteamId, 5, 5, UserSubscription.Free);
+                firstMatchCheck = await test.WorkUser(testSteamId, 5, 5, AnalyzerQuality.Low);
 
-                secondMatchCheck = await test.WorkUser(testSteamId, 5, 5, UserSubscription.Ultimate);
+                secondMatchCheck = await test.WorkUser(testSteamId, 5, 5, AnalyzerQuality.High);
             }
 
             using (var context = new FaceitContext(testOptions))

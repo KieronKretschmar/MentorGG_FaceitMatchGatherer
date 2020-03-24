@@ -11,9 +11,9 @@ using System;
 using Moq;
 using System.ComponentModel;
 using Entities.Models;
-using FaceitMatchGatherer.Enums;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using RabbitCommunicationLib.Enums;
 
 namespace FaceitMatchGathererTests
 {
@@ -281,10 +281,10 @@ namespace FaceitMatchGathererTests
 
                 // Create UsersController and call LookForMatches
                 var usersController = new UsersController(serviceProvider.GetService<ILogger<UsersController>>(), context, mockFaceitOAuthCommunicator.Object, mockFaceitApiCommunicator.Object, mockFaceitMatchesWorker.Object);
-                var lfmResponse = await usersController.LookForMatches(user.SteamId, UserSubscription.Ultimate);
+                var lfmResponse = await usersController.LookForMatches(user.SteamId, AnalyzerQuality.High);
 
                 // Verify that WorkUser was called
-                mockFaceitMatchesWorker.Verify(x => x.WorkUser(user.SteamId, It.IsAny<int>(), It.IsAny<int>(), UserSubscription.Ultimate), Times.Once);
+                mockFaceitMatchesWorker.Verify(x => x.WorkUser(user.SteamId, It.IsAny<int>(), It.IsAny<int>(), AnalyzerQuality.High), Times.Once);
             }
         }
     }

@@ -10,7 +10,7 @@ using Entities.Models;
 using System.IdentityModel.Tokens.Jwt;
 using static Entities.Enumerals;
 using Microsoft.Extensions.Logging;
-using FaceitMatchGatherer.Enums;
+using RabbitCommunicationLib.Enums;
 
 namespace FaceitMatchGatherer.Controllers
 {
@@ -128,12 +128,13 @@ namespace FaceitMatchGatherer.Controllers
         /// Triggers calls to the Faceit API to find new matches of the specified user, and initiates the process of analyzing them.
         /// </summary>
         /// <param name="steamId"></param>
+        /// <param name="requestedQuality">Enum. If a match was already analyzed with an equal or higher quality, it will not be re-analyzed.</param>
         /// <returns></returns>
         [HttpPost("{steamId}/look-for-matches")]
-        public async Task<ActionResult<bool>> LookForMatches(long steamId, UserSubscription userSubscription )
+        public async Task<ActionResult<bool>> LookForMatches(long steamId, AnalyzerQuality requestedQuality )
         {
             _logger.LogInformation($"LookForMatches called with steamId [ {steamId} ]");
-            return await _faceitMatchesWorker.WorkUser(steamId, 20, 60, userSubscription);
+            return await _faceitMatchesWorker.WorkUser(steamId, 20, 60, requestedQuality);
         }
 
         private bool UserExists(string id)

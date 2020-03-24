@@ -4,17 +4,17 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RabbitCommunicationLib.Interfaces;
 using RabbitCommunicationLib.TransferModels;
-using FaceitMatchGatherer.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using RabbitCommunicationLib.Enums;
 
 namespace FaceitMatchGatherer
 {
     public interface IFaceitMatchesWorker
     {
-        Task<bool> WorkUser(long steamId, int maxMatches, int maxAgeInDays, UserSubscription userSubscription);
+        Task<bool> WorkUser(long steamId, int maxMatches, int maxAgeInDays, AnalyzerQuality quality);
     }
 
     /// <summary>
@@ -42,13 +42,10 @@ namespace FaceitMatchGatherer
         /// <param name="maxMatches"></param>
         /// <param name="maxAgeInDays"></param>
         /// <returns>bool, whether a new match was found</returns>
-        public async Task<bool> WorkUser(long steamId, int maxMatches, int maxAgeInDays, UserSubscription userSubscription)
+        public async Task<bool> WorkUser(long steamId, int maxMatches, int maxAgeInDays, AnalyzerQuality quality)
         {
-
-            var requestedQuality = QualityPerSubscription.Qualities[userSubscription];
-
             // Get new matches
-            var matches = await GetNewMatches(steamId, maxMatches, maxAgeInDays, requestedQuality);
+            var matches = await GetNewMatches(steamId, maxMatches, maxAgeInDays, quality);
 
             foreach (var match in matches)
             {
@@ -59,10 +56,10 @@ namespace FaceitMatchGatherer
                     _context.Matches.Add(new Match
                     {
                         FaceitMatchId = match.FaceitMatchId,
-                        AnalyzedQuality = requestedQuality
+                        AnalyzedQuality = quality
                     });
                 else
-                    demoInDb.AnalyzedQuality = requestedQuality;
+                    demoInDb.AnalyzedQuality = quality;
                
 
                 await _context.SaveChangesAsync();

@@ -73,10 +73,25 @@ namespace FaceitMatchGatherer
                 return;
             }
 
-            string BASE_HTTP_MENTORINTERFACE = Configuration.GetValue<string>("BASE_HTTP_MENTORINTERFACE") ?? throw new ArgumentNullException("Env var BASE_HTTP_MENTORINTERFACE is null, but required!");
+
+            string BASE_HTTP_MENTORINTERFACE = GetRequiredEnvironmentVariable<string>(Configuration, "BASE_HTTP_MENTORINTERFACE");
+            int MATCHES_LOOKER_MAX_USERS = GetOptionalEnvironmentVariable(Configuration, "MAX_USERS_TO_REFRESH", 20);
+            TimeSpan MATCHES_LOOKER_PERIOD_DAYS= GetOptionalEnvironmentVariable(Configuration, "USER_REFRESH_INTERVAL", TimeSpan.FromDays(7),x => TimeSpan.FromDays(double.Parse(x)));
+            TimeSpan MATCHES_LOOKER_ACTIVITY_TIMESPAN = GetOptionalEnvironmentVariable(Configuration, "ACTIVITY_SPAN", TimeSpan.FromDays(21),x => TimeSpan.FromDays(double.Parse(x)));
+
+
             services.AddSingleton<IFaceitApiCommunicator, FaceitApiCommunicator>();
             services.AddSingleton<IFaceitOAuthCommunicator, FaceitOAuthCommunicator>();
             services.AddTransient<IFaceitMatchesWorker, FaceitMatchesWorker>();
+            services.AddTransient<IMatchLooker>(services =>
+            {
+                return new MatchLooker(MATCHES_LOOKER_ACTIVITY_TIMESPAN, MATCHES_LOOKER_MAX_USERS, services.GetRequiredService<ILogger<MatchLooker>>(), services.GetRequiredService<FaceitContext>(), services.GetRequiredService<FaceitMatchesWorker>());
+            });
+            services.AddTransient<IPeriodicMatchLooker>(services =>
+            {
+                return new PeriodicMatchLooker(MATCHES_LOOKER_PERIOD_DAYS, services.GetRequiredService<IMatchLooker>(), services.GetRequiredService<ILogger<PeriodicMatchLooker>>());
+            });
+
             services.AddHttpClient("mentor-interface", c =>
              {
                  c.BaseAddress = new Uri(BASE_HTTP_MENTORINTERFACE);
@@ -149,6 +164,48 @@ namespace FaceitMatchGatherer
                 services.GetRequiredService<FaceitContext>().Database.Migrate();
             }
 
+        }
+
+        /// <summary>
+        /// Attempt to retrieve an Environment Variable
+        /// Throws ArgumentNullException is not found.
+        /// </summary>
+        /// <typeparam name="T">Type to retreive</typeparam>
+        private static T GetRequiredEnvironmentVariable<T>(IConfiguration config, string key)
+        {
+            T value = config.GetValue<T>(key);
+            if (value == null)
+            {
+                throw new ArgumentNullException(
+                    $"{key} is missing, Configure the `{key}` environment variable.");
+            }
+            else
+            {
+                return value;
+            }
+        }
+
+        /// <summary>
+        /// Attempt to retrieve an Environment Variable
+        /// Returns default value if not found.
+        /// </summary>
+        /// <typeparam name="T">Type to retreive</typeparam>
+        private static T GetOptionalEnvironmentVariable<T>(IConfiguration config, string key, T defaultValue, Func<string,T> conversionFunction = null)
+        {
+            var stringValue = config.GetSection(key).Value;
+            try
+            {
+                if (conversionFunction is null)
+                    return conversionFunction(stringValue);
+
+                T value = (T) Convert.ChangeType(stringValue, typeof(T), System.Globalization.CultureInfo.InvariantCulture);
+                return value;
+            }
+            catch (InvalidCastException e)
+            {
+                Console.WriteLine($"Env var [ {key} ] not specified. Defaulting to [ {defaultValue} ]");
+                return defaultValue;
+            }
         }
     }
 }

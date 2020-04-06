@@ -133,6 +133,11 @@ namespace FaceitMatchGatherer.Controllers
         public async Task<ActionResult<bool>> LookForMatches(long steamId)
         {
             _logger.LogInformation($"LookForMatches called with steamId [ {steamId} ]");
+
+            var user =  _context.Users.Find(steamId);
+            user.LastActivity = DateTime.UtcNow;
+            _context.SaveChanges();
+
             return await _faceitMatchesWorker.WorkUser(steamId, 20, 60);
         }
 

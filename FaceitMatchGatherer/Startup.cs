@@ -48,7 +48,6 @@ namespace FaceitMatchGatherer
                 services.AddDebug();
             });
 
-            string BASE_HTTP_MENTORINTERFACE = Configuration.GetValue<string>("BASE_HTTP_MENTORINTERFACE") ?? throw new ArgumentNullException("Env var BASE_HTTP_MENTORINTERFACE is null, but required!");
 
             #region database
 
@@ -74,6 +73,7 @@ namespace FaceitMatchGatherer
                 return;
             }
 
+            string BASE_HTTP_MENTORINTERFACE = Configuration.GetValue<string>("BASE_HTTP_MENTORINTERFACE") ?? throw new ArgumentNullException("Env var BASE_HTTP_MENTORINTERFACE is null, but required!");
             services.AddSingleton<IFaceitApiCommunicator, FaceitApiCommunicator>();
             services.AddSingleton<IFaceitOAuthCommunicator, FaceitOAuthCommunicator>();
             services.AddTransient<IFaceitMatchesWorker, FaceitMatchesWorker>();

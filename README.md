@@ -14,6 +14,8 @@ Required for communication with [Faceit's Data API](https://developers.faceit.co
 - `MYSQL_CONNECTION_STRING` : Connection string to FaceitMatchGatherer DB[*]
 - `AMQP_URI` : URI to the rabbit cluster [*]
 - `AMQP_FACEIT_QUEUE` : Rabbit queue's name for producing messages to DemoCentral [*]
+Required for communication with MentorInterface
+- `BASE_HTTP_MENTORINTERFACE` http address to mentor interface
 
 [*] *Required*
 

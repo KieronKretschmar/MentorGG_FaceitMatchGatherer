@@ -128,13 +128,12 @@ namespace FaceitMatchGatherer.Controllers
         /// Triggers calls to the Faceit API to find new matches of the specified user, and initiates the process of analyzing them.
         /// </summary>
         /// <param name="steamId"></param>
-        /// <param name="requestedQuality">Enum. If a match was already analyzed with an equal or higher quality, it will not be re-analyzed.</param>
         /// <returns></returns>
         [HttpPost("{steamId}/look-for-matches")]
-        public async Task<ActionResult<bool>> LookForMatches(long steamId, AnalyzerQuality requestedQuality )
+        public async Task<ActionResult<bool>> LookForMatches(long steamId)
         {
             _logger.LogInformation($"LookForMatches called with steamId [ {steamId} ]");
-            return await _faceitMatchesWorker.WorkUser(steamId, 20, 60, requestedQuality);
+            return await _faceitMatchesWorker.WorkUser(steamId, 20, 60);
         }
 
         private bool UserExists(string id)

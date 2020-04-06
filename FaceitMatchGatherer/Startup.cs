@@ -48,6 +48,8 @@ namespace FaceitMatchGatherer
                 services.AddDebug();
             });
 
+            string BASE_HTTP_MENTORINTERFACE = Configuration.GetValue<string>("BASE_HTTP_MENTORINTERFACE") ?? throw new ArgumentNullException("Env var BASE_HTTP_MENTORINTERFACE is null, but required!");
+
             #region database
 
             // if a connectionString is set use mysql, else use InMemory
@@ -59,12 +61,12 @@ namespace FaceitMatchGatherer
             else
             {
                 Console.WriteLine("WARNING: Using in memory database! Is `MYSQL_CONNECTION_STRING` set?");
-                services.AddDbContext<Database.FaceitContext>( options =>
-                    {
-                        options.UseInMemoryDatabase(databaseName: "MyInMemoryDatabase");
-                    });
+                services.AddDbContext<Database.FaceitContext>(options =>
+                   {
+                       options.UseInMemoryDatabase(databaseName: "MyInMemoryDatabase");
+                   });
             }
-			#endregion
+            #endregion
 
             if (Configuration.GetValue<bool>("IS_MIGRATING"))
             {
@@ -75,6 +77,11 @@ namespace FaceitMatchGatherer
             services.AddSingleton<IFaceitApiCommunicator, FaceitApiCommunicator>();
             services.AddSingleton<IFaceitOAuthCommunicator, FaceitOAuthCommunicator>();
             services.AddTransient<IFaceitMatchesWorker, FaceitMatchesWorker>();
+            services.AddHttpClient("mentor-interface", c =>
+             {
+                 c.BaseAddress = new Uri(BASE_HTTP_MENTORINTERFACE);
+             });
+            services.AddTransient<IUserIdentityRetriever, UserIdentityRetriever>();
 
             #region RabbitMQ
 

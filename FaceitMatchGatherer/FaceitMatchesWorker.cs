@@ -9,12 +9,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using RabbitCommunicationLib.Enums;
+using System.Net.Http;
 
 namespace FaceitMatchGatherer
 {
     public interface IFaceitMatchesWorker
     {
-        Task<bool> WorkUser(long steamId, int maxMatches, int maxAgeInDays, AnalyzerQuality quality);
+        Task<bool> WorkUser(long steamId, int maxMatches, int maxAgeInDays);
     }
 
     /// <summary>
@@ -26,13 +27,15 @@ namespace FaceitMatchGatherer
         private readonly FaceitContext _context;
         private readonly IFaceitApiCommunicator _apiCommunicator;
         private readonly IProducer<DemoInsertInstruction> _rabbitProducer;
+        private readonly IUserIdentityRetriever _userIdentityRetriever;
 
-        public FaceitMatchesWorker(ILogger<FaceitMatchesWorker> logger, FaceitContext context, IFaceitApiCommunicator apiCommunicator, IProducer<DemoInsertInstruction> rabbitProducer)
+        public FaceitMatchesWorker(ILogger<FaceitMatchesWorker> logger, FaceitContext context, IFaceitApiCommunicator apiCommunicator, IProducer<DemoInsertInstruction> rabbitProducer, IUserIdentityRetriever userIdentityRetriever)
         {
             _logger = logger;
             _context = context;
             _apiCommunicator = apiCommunicator;
             _rabbitProducer = rabbitProducer;
+            _userIdentityRetriever = userIdentityRetriever;
         }
 
         /// <summary>
@@ -42,8 +45,10 @@ namespace FaceitMatchGatherer
         /// <param name="maxMatches"></param>
         /// <param name="maxAgeInDays"></param>
         /// <returns>bool, whether a new match was found</returns>
-        public async Task<bool> WorkUser(long steamId, int maxMatches, int maxAgeInDays, AnalyzerQuality quality)
+        public async Task<bool> WorkUser(long steamId, int maxMatches, int maxAgeInDays)
         {
+            //var response = await _client.GetAsync($"identity/{steamId}");
+            var quality = await _userIdentityRetriever.GetAnalyzerQualityAsync(steamId); 
             // Get new matches
             var matches = await GetNewMatches(steamId, maxMatches, maxAgeInDays, quality);
 
@@ -60,7 +65,7 @@ namespace FaceitMatchGatherer
                     });
                 else
                     demoInDb.AnalyzedQuality = quality;
-               
+
 
                 await _context.SaveChangesAsync();
 

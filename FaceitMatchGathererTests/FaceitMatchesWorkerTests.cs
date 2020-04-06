@@ -58,11 +58,15 @@ namespace FaceitMatchGathererTests
                 .Setup(x => x.GetPlayerMatches(It.Is<long>(x => x == steamId), It.Is<int>(x => x == maxMatches), It.Is<int>(x => x == maxAgeInDays)))
                 .Returns(Task.FromResult(matches));
 
+            var mockIUserIdentityRetriever = new Mock<IUserIdentityRetriever>();
+            mockIUserIdentityRetriever.Setup(x => x.GetAnalyzerQualityAsync(It.IsAny<long>())).Returns(Task.FromResult(AnalyzerQuality.High));
+
             // Call WorkUser and expect it to publish matches to queue and database
             using (var context = new FaceitContext(options))
             {
-                var faceitMatchesWorker = new FaceitMatchesWorker(serviceProvider.GetService<ILogger<FaceitMatchesWorker>>(), context, mockFaceitApiCommunicator.Object, mockRabbitProducer.Object);
-                var foundMatches = await faceitMatchesWorker.WorkUser(steamId, maxMatches, maxAgeInDays, AnalyzerQuality.High);
+
+                var faceitMatchesWorker = new FaceitMatchesWorker(serviceProvider.GetService<ILogger<FaceitMatchesWorker>>(), context, mockFaceitApiCommunicator.Object, mockRabbitProducer.Object, mockIUserIdentityRetriever.Object);
+                var foundMatches = await faceitMatchesWorker.WorkUser(steamId, maxMatches, maxAgeInDays);
 
                 Assert.IsTrue(foundMatches);
             }
@@ -79,12 +83,12 @@ namespace FaceitMatchGathererTests
             // Call endpoint again, expecting no more matches to be added to happen
             using (var context = new FaceitContext(options))
             {
-                var faceitMatchesWorker = new FaceitMatchesWorker(serviceProvider.GetService<ILogger<FaceitMatchesWorker>>(), context, mockFaceitApiCommunicator.Object, mockRabbitProducer.Object);
-                var foundMatches = await faceitMatchesWorker.WorkUser(steamId, 20, 60, AnalyzerQuality.High);
+                var faceitMatchesWorker = new FaceitMatchesWorker(serviceProvider.GetService<ILogger<FaceitMatchesWorker>>(), context, mockFaceitApiCommunicator.Object, mockRabbitProducer.Object, mockIUserIdentityRetriever.Object);
+                var foundMatches = await faceitMatchesWorker.WorkUser(steamId, 20, 60);
                 Assert.IsFalse(foundMatches);
 
                 // Verify that no more messages were published
-                mockRabbitProducer.Verify(x => x.PublishMessage( It.IsAny<DemoInsertInstruction>(),It.IsAny<string>()), Times.Exactly(matches.Count()));
+                mockRabbitProducer.Verify(x => x.PublishMessage(It.IsAny<DemoInsertInstruction>(), It.IsAny<string>()), Times.Exactly(matches.Count()));
             }
         }
 
@@ -105,19 +109,22 @@ namespace FaceitMatchGathererTests
 
                 var testFaceitMatch = new FaceitMatchData
                 {
-                    FaceitMatchId = "testFaceitID",                
+                    FaceitMatchId = "testFaceitID",
                 };
                 var mockFaceitAPI = new Mock<IFaceitApiCommunicator>();
                 mockFaceitAPI.Setup(x => x.GetPlayerMatches(testSteamId, It.IsAny<int>(), It.IsAny<int>())).Returns(Task.FromResult<IEnumerable<FaceitMatchData>>(new List<FaceitMatchData> { testFaceitMatch }));
                 mockFaceitAPI.Setup(x => x.GetDemoUrl(It.IsAny<string>())).Returns(Task.FromResult("testDownloadUrl"));
 
                 var mockRabbit = new Mock<IProducer<DemoInsertInstruction>>();
+                var mockUserIdentityRetriever = new Mock<IUserIdentityRetriever>();
+                mockUserIdentityRetriever.Setup(x => x.GetAnalyzerQualityAsync(It.IsAny<long>())).Returns(Task.FromResult(AnalyzerQuality.High));
 
-                var test = new FaceitMatchesWorker(serviceProvider.GetRequiredService<ILogger<FaceitMatchesWorker>>(), context, mockFaceitAPI.Object, mockRabbit.Object);
+                var test = new FaceitMatchesWorker(serviceProvider.GetRequiredService<ILogger<FaceitMatchesWorker>>(), context, mockFaceitAPI.Object, mockRabbit.Object,mockUserIdentityRetriever.Object);
 
-                firstMatchCheck = await test.WorkUser(testSteamId, 5, 5, AnalyzerQuality.High);
+                firstMatchCheck = await test.WorkUser(testSteamId, 5, 5);
+                mockUserIdentityRetriever.Setup(x => x.GetAnalyzerQualityAsync(It.IsAny<long>())).Returns(Task.FromResult(AnalyzerQuality.Low));
 
-                secondMatchCheck = await test.WorkUser(testSteamId, 5, 5, AnalyzerQuality.Low);
+                secondMatchCheck = await test.WorkUser(testSteamId, 5, 5);
             }
 
             using (var context = new FaceitContext(testOptions))
@@ -152,12 +159,16 @@ namespace FaceitMatchGathererTests
                 mockFaceitAPI.Setup(x => x.GetDemoUrl(It.IsAny<string>())).Returns(Task.FromResult("testDownloadUrl"));
 
                 var mockRabbit = new Mock<IProducer<DemoInsertInstruction>>();
+                var mockUserRetriever = new Mock<IUserIdentityRetriever>();
+                mockUserRetriever.Setup(x => x.GetAnalyzerQualityAsync(It.IsAny<long>())).Returns(Task.FromResult(AnalyzerQuality.Low));
 
-                var test = new FaceitMatchesWorker(serviceProvider.GetRequiredService<ILogger<FaceitMatchesWorker>>(), context, mockFaceitAPI.Object, mockRabbit.Object);
+                var test = new FaceitMatchesWorker(serviceProvider.GetRequiredService<ILogger<FaceitMatchesWorker>>(), context, mockFaceitAPI.Object, mockRabbit.Object, mockUserRetriever.Object);
 
-                firstMatchCheck = await test.WorkUser(testSteamId, 5, 5, AnalyzerQuality.Low);
+                firstMatchCheck = await test.WorkUser(testSteamId, 5, 5);
+                mockUserRetriever.Setup(x => x.GetAnalyzerQualityAsync(It.IsAny<long>())).Returns(Task.FromResult(AnalyzerQuality.High));
 
-                secondMatchCheck = await test.WorkUser(testSteamId, 5, 5, AnalyzerQuality.High);
+
+                secondMatchCheck = await test.WorkUser(testSteamId, 5, 5);
             }
 
             using (var context = new FaceitContext(testOptions))

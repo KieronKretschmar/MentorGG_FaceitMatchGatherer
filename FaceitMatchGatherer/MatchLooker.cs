@@ -9,23 +9,29 @@ namespace FaceitMatchGatherer
 {
     public interface IMatchLooker
     {
-        Task RefreshActiveUserAsync(int maxUsers, TimeSpan lastActivity);
+        Task RefreshActiveUsersAsync();
     }
 
     public class MatchLooker : IMatchLooker
     {
+        private readonly TimeSpan _timeSinceLastActivity;
+        private readonly int _maxUsersToRefresh;
         private readonly ILogger<MatchLooker> _logger;
         private readonly FaceitContext _context;
         private readonly FaceitMatchesWorker _matchesWorker;
 
-        public MatchLooker(ILogger<MatchLooker> logger, FaceitContext context, FaceitMatchesWorker matchesWorker)
+        public MatchLooker(TimeSpan timeSinceLastActivity, int maxUsersToRefresh, ILogger<MatchLooker> logger, FaceitContext context, FaceitMatchesWorker matchesWorker)
         {
+            _timeSinceLastActivity = timeSinceLastActivity;
+            _maxUsersToRefresh = maxUsersToRefresh;
             _logger = logger;
             _context = context;
             _matchesWorker = matchesWorker;
         }
-        public async Task RefreshActiveUserAsync(int maxUsers, TimeSpan lastActivity)
+        public async Task RefreshActiveUsersAsync()
         {
+            int maxUsers = _maxUsersToRefresh;
+            TimeSpan lastActivity = _timeSinceLastActivity;
             _logger.LogInformation($"Refreshing {maxUsers} users who were active in the last {lastActivity.Days} Days");
             var earliestAllowedActivity = DateTime.UtcNow - lastActivity;
 

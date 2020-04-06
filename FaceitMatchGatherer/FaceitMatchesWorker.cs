@@ -47,7 +47,6 @@ namespace FaceitMatchGatherer
         /// <returns>bool, whether a new match was found</returns>
         public async Task<bool> WorkUser(long steamId, int maxMatches, int maxAgeInDays)
         {
-            //var response = await _client.GetAsync($"identity/{steamId}");
             var quality = await _userIdentityRetriever.GetAnalyzerQualityAsync(steamId); 
             // Get new matches
             var matches = await GetNewMatches(steamId, maxMatches, maxAgeInDays, quality);
@@ -80,7 +79,7 @@ namespace FaceitMatchGatherer
 
             // Update user.LastChecked
             var user = await _context.Users.FindAsync(steamId);
-            user.LastChecked = DateTime.Now;
+            user.LastChecked = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
             var matchesFound = matches.Any();

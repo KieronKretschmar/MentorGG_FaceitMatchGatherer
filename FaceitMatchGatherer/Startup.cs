@@ -100,9 +100,9 @@ namespace FaceitMatchGatherer
 
             #region RabbitMQ
 
-            var AMQP_URI = Configuration.GetValue<string>("AMQP_URI") ?? throw new ArgumentException("AMQP_URI is missing, configure the `AMQP_URI` enviroment variable.");
+            var AMQP_URI = GetRequiredEnvironmentVariable<string>(Configuration, "AMQP_URI");
 
-            var AMQP_FACEIT_QUEUE = Configuration.GetValue<string>("AMQP_FACEIT_QUEUE") ?? throw new ArgumentException("AMQP_FACEIT_QUEUE is missing, configure the `AMQP_FACEIT_QUEUE` enviroment variable.");
+            var AMQP_FACEIT_QUEUE = GetRequiredEnvironmentVariable<string>(Configuration, "AMQP_FACEIT_QUEUE");
 
             // Create producer
             var connection = new QueueConnection(AMQP_URI, AMQP_FACEIT_QUEUE);

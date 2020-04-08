@@ -47,6 +47,8 @@ namespace FaceitMatchGatherer
         /// <returns>bool, whether a new match was found</returns>
         public async Task<bool> WorkUser(long steamId, int maxMatches, int maxAgeInDays)
         {
+            _logger.LogInformation($"Working user with steamId [ {steamId} ], maxMatches [ {maxMatches} ] and maxAgeInDays [ {maxAgeInDays} ]");
+
             var quality = await _userIdentityRetriever.GetAnalyzerQualityAsync(steamId); 
             // Get new matches
             var matches = await GetNewMatches(steamId, maxMatches, maxAgeInDays, quality);
@@ -57,29 +59,43 @@ namespace FaceitMatchGatherer
 
                 if (demoInDb == null)
                 {
+                    _logger.LogInformation($"Found new match with FaceitMatchId [ {match.FaceitMatchId} ] for user with steamId [ {steamId} ]");
+
                     var newMatch = new Match
                     {
                         FaceitMatchId = match.FaceitMatchId,
                         AnalyzedQuality = quality
                     };
 
+                    // Add to database
                     _context.Matches.Add(newMatch);
+                    await _context.SaveChangesAsync();
+
+                    // Publish to rabbit queue
+                    _rabbitProducer.PublishMessage(match.ToTransferModel());
+
+                    _logger.LogInformation($"Updated and published model with DownloadUrl [ {match.DownloadUrl} ] from uploader#{match.UploaderId} to queue.");
+                }
+                else if (demoInDb.AnalyzedQuality < quality)
+                {
+                    _logger.LogInformation($"Found match to re-analyze with FaceitMatchId [ {match.FaceitMatchId} ] for user with steamId [ {steamId} ]. Previous quality [ {demoInDb.AnalyzedQuality} ], new quality [ {quality} ]");
+
+                    // update database
+                    demoInDb.AnalyzedQuality = quality;
+                    await _context.SaveChangesAsync();
+
+                    // Publish to rabbit queue
+                    _rabbitProducer.PublishMessage(match.ToTransferModel());
+
+                    _logger.LogInformation($"Updated and published model with DownloadUrl [ {match.DownloadUrl} ] from uploader#{match.UploaderId} to queue.");
                 }
                 else
                 {
-                    demoInDb.AnalyzedQuality = quality;
+                    // match is already known in at least the same quality
+                    continue;
                 }
 
 
-                await _context.SaveChangesAsync();
-
-                // Create rabbit transfer model
-                var model = match.ToTransferModel();
-
-                _logger.LogInformation($"Publishing model with DownloadUrl [ {match.DownloadUrl} ] from uploader#{match.UploaderId} to queue.");
-
-                // Publish to rabbit queue
-                _rabbitProducer.PublishMessage(model);
             }
 
             // Update user.LastChecked

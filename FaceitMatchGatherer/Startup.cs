@@ -83,14 +83,15 @@ namespace FaceitMatchGatherer
             services.AddSingleton<IFaceitApiCommunicator, FaceitApiCommunicator>();
             services.AddSingleton<IFaceitOAuthCommunicator, FaceitOAuthCommunicator>();
             services.AddTransient<IFaceitMatchesWorker, FaceitMatchesWorker>();
-            services.AddTransient<IMatchLooker>(services =>
-            {
-                return new MatchLooker(MATCHES_LOOKER_ACTIVITY_TIMESPAN, MATCHES_LOOKER_MAX_USERS, services.GetRequiredService<ILogger<MatchLooker>>(), services.GetRequiredService<FaceitContext>(), services.GetRequiredService<FaceitMatchesWorker>());
-            });
-            services.AddTransient<IPeriodicMatchLooker>(services =>
-            {
-                return new PeriodicMatchLooker(MATCHES_LOOKER_PERIOD_DAYS, services.GetRequiredService<IMatchLooker>(), services.GetRequiredService<ILogger<PeriodicMatchLooker>>());
-            });
+
+            //services.AddTransient<IMatchLooker>(services =>
+            //{
+            //    return new MatchLooker(MATCHES_LOOKER_ACTIVITY_TIMESPAN, MATCHES_LOOKER_MAX_USERS, services.GetRequiredService<ILogger<MatchLooker>>(), services.GetRequiredService<FaceitContext>(), services.GetRequiredService<FaceitMatchesWorker>());
+            //});
+            //services.AddTransient<IPeriodicMatchLooker>(services =>
+            //{
+            //    return new PeriodicMatchLooker(MATCHES_LOOKER_PERIOD_DAYS, services.GetRequiredService<IMatchLooker>(), services.GetRequiredService<ILogger<PeriodicMatchLooker>>());
+            //});
 
             services.AddHttpClient("mentor-interface", c =>
              {

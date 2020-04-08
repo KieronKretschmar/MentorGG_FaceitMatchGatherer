@@ -74,7 +74,7 @@ namespace FaceitMatchGatherer
             }
 
 
-            string BASE_HTTP_MENTORINTERFACE = GetRequiredEnvironmentVariable<string>(Configuration, "BASE_HTTP_MENTORINTERFACE");
+            string MENTORINTERFACE_BASE_ADDRESS = GetRequiredEnvironmentVariable<string>(Configuration, "MENTORINTERFACE_BASE_ADDRESS");
             int MATCHES_LOOKER_MAX_USERS = GetOptionalEnvironmentVariable<int>(Configuration, "MATCHES_LOOKER_MAX_USERS", 20);
             TimeSpan MATCHES_LOOKER_PERIOD_DAYS = TimeSpan.FromDays(GetOptionalEnvironmentVariable<double>(Configuration, "MATCHES_LOOKER_PERIOD_DAYS", 7));
             TimeSpan MATCHES_LOOKER_ACTIVITY_TIMESPAN = TimeSpan.FromDays(GetOptionalEnvironmentVariable<double>(Configuration, "MATCHES_LOOKER_ACTIVITY_TIMESPAN", 21));
@@ -94,7 +94,7 @@ namespace FaceitMatchGatherer
 
             services.AddHttpClient("mentor-interface", c =>
              {
-                 c.BaseAddress = new Uri(BASE_HTTP_MENTORINTERFACE);
+                 c.BaseAddress = new Uri(MENTORINTERFACE_BASE_ADDRESS);
              });
             services.AddTransient<IUserIdentityRetriever, UserIdentityRetriever>();
 

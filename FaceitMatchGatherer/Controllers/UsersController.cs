@@ -134,7 +134,18 @@ namespace FaceitMatchGatherer.Controllers
         {
             _logger.LogInformation($"LookForMatches called with steamId [ {steamId} ]");
 
+
+
             var user =  _context.Users.Find(steamId);
+
+            // Workaround while filling up database pre-release of kubernetes backend
+            // Can be removed after launch
+            if (user == null)
+            {
+                _logger.LogWarning($"User with SteamId [ {steamId} ] not found in database. Ignoring the request under the assumption that this is because of the pre-release db fill.");
+                return false;
+            }
+
             user.LastActivity = DateTime.UtcNow;
             _context.SaveChanges();
 

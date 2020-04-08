@@ -20,6 +20,7 @@ Required for the background service refreshing active users matches
 - `MATCHES_LOOKER_MAX_USERS` : max amount of users to refresh in one interval - defaults to 20
 - `MATCHES_LOOKER_PERIOD_DAYS` : interval in which to call match looker for a user refresh - defaults to 7 days
 - `MATCHES_LOOKER_ACTIVITY_TIMESPAN` : interval in which users had to be active for matches to be recognized - defaults to 21 days
+- `IS_MIGRATING` : set to "true" if you only want to run migrations without env vars configured
  
 [*] *Required*
 

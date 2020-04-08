@@ -75,10 +75,9 @@ namespace FaceitMatchGatherer
 
 
             string BASE_HTTP_MENTORINTERFACE = GetRequiredEnvironmentVariable<string>(Configuration, "BASE_HTTP_MENTORINTERFACE");
-            int MATCHES_LOOKER_MAX_USERS = GetOptionalEnvironmentVariable(Configuration, "MAX_USERS_TO_REFRESH", 20);
-            TimeSpan MATCHES_LOOKER_PERIOD_DAYS= GetOptionalEnvironmentVariable(Configuration, "USER_REFRESH_INTERVAL", TimeSpan.FromDays(7),x => TimeSpan.FromDays(double.Parse(x)));
-            TimeSpan MATCHES_LOOKER_ACTIVITY_TIMESPAN = GetOptionalEnvironmentVariable(Configuration, "ACTIVITY_SPAN", TimeSpan.FromDays(21),x => TimeSpan.FromDays(double.Parse(x)));
-
+            int MATCHES_LOOKER_MAX_USERS = GetOptionalEnvironmentVariable<int>(Configuration, "MATCHES_LOOKER_MAX_USERS", 20);
+            TimeSpan MATCHES_LOOKER_PERIOD_DAYS = TimeSpan.FromDays(GetOptionalEnvironmentVariable<double>(Configuration, "MATCHES_LOOKER_PERIOD_DAYS", 7));
+            TimeSpan MATCHES_LOOKER_ACTIVITY_TIMESPAN = TimeSpan.FromDays(GetOptionalEnvironmentVariable<double>(Configuration, "MATCHES_LOOKER_ACTIVITY_TIMESPAN", 21));
 
             services.AddSingleton<IFaceitApiCommunicator, FaceitApiCommunicator>();
             services.AddSingleton<IFaceitOAuthCommunicator, FaceitOAuthCommunicator>();
@@ -191,15 +190,12 @@ namespace FaceitMatchGatherer
         /// Returns default value if not found.
         /// </summary>
         /// <typeparam name="T">Type to retreive</typeparam>
-        private static T GetOptionalEnvironmentVariable<T>(IConfiguration config, string key, T defaultValue, Func<string,T> conversionFunction = null)
+        private static T GetOptionalEnvironmentVariable<T>(IConfiguration config, string key, T defaultValue)
         {
             var stringValue = config.GetSection(key).Value;
             try
             {
-                if (conversionFunction is null)
-                    return conversionFunction(stringValue);
-
-                T value = (T) Convert.ChangeType(stringValue, typeof(T), System.Globalization.CultureInfo.InvariantCulture);
+                T value = (T)Convert.ChangeType(stringValue, typeof(T), System.Globalization.CultureInfo.InvariantCulture);
                 return value;
             }
             catch (InvalidCastException e)

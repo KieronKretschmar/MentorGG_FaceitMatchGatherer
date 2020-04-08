@@ -55,15 +55,20 @@ namespace FaceitMatchGatherer
             {
                 var demoInDb = _context.Matches.SingleOrDefault(x => x.FaceitMatchId == match.FaceitMatchId);
 
-                //TODO make a pretty upsert
                 if (demoInDb == null)
-                    _context.Matches.Add(new Match
+                {
+                    var newMatch = new Match
                     {
                         FaceitMatchId = match.FaceitMatchId,
                         AnalyzedQuality = quality
-                    });
+                    };
+
+                    _context.Matches.Add(newMatch);
+                }
                 else
+                {
                     demoInDb.AnalyzedQuality = quality;
+                }
 
 
                 await _context.SaveChangesAsync();

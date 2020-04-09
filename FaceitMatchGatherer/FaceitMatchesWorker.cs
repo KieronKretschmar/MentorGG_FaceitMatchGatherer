@@ -57,6 +57,13 @@ namespace FaceitMatchGatherer
             {
                 var demoInDb = _context.Matches.SingleOrDefault(x => x.FaceitMatchId == match.FaceitMatchId);
 
+                if(demoInDb != null && demoInDb.AnalyzedQuality >= quality)
+                {
+                    // match is already known in at least the same quality
+                    continue;
+                }
+
+                // Update database for new demo
                 if (demoInDb == null)
                 {
                     _logger.LogInformation($"Found new match with FaceitMatchId [ {match.FaceitMatchId} ] for user with steamId [ {steamId} ]");
@@ -71,12 +78,12 @@ namespace FaceitMatchGatherer
                     _context.Matches.Add(newMatch);
                     await _context.SaveChangesAsync();
 
-                    // Publish to rabbit queue
-                    _rabbitProducer.PublishMessage(match.ToTransferModel());
-
-                    _logger.LogInformation($"Updated and published model with DownloadUrl [ {match.DownloadUrl} ] from uploader#{match.UploaderId} to queue.");
+                    await PublishMessage(match.ToTransferModel());
+                    continue;
                 }
-                else if (demoInDb.AnalyzedQuality < quality)
+
+                // Update database for re-analyzed demo
+                if (demoInDb.AnalyzedQuality < quality)
                 {
                     _logger.LogInformation($"Found match to re-analyze with FaceitMatchId [ {match.FaceitMatchId} ] for user with steamId [ {steamId} ]. Previous quality [ {demoInDb.AnalyzedQuality} ], new quality [ {quality} ]");
 
@@ -84,16 +91,10 @@ namespace FaceitMatchGatherer
                     demoInDb.AnalyzedQuality = quality;
                     await _context.SaveChangesAsync();
 
-                    // Publish to rabbit queue
-                    _rabbitProducer.PublishMessage(match.ToTransferModel());
-
-                    _logger.LogInformation($"Updated and published model with DownloadUrl [ {match.DownloadUrl} ] from uploader#{match.UploaderId} to queue.");
-                }
-                else
-                {
-                    // match is already known in at least the same quality
+                    await PublishMessage(match.ToTransferModel());
                     continue;
                 }
+
             }
 
             // Update user.LastChecked
@@ -162,6 +163,14 @@ namespace FaceitMatchGatherer
             }
 
             return newMatches;
+        }
+
+        private async Task PublishMessage(DemoInsertInstruction message)
+        {
+            // Publish to rabbit queue
+            _rabbitProducer.PublishMessage(message);
+
+            _logger.LogInformation($"Updated and published model with DownloadUrl [ {message.DownloadUrl} ] from uploader [ {message.UploaderId} ] to queue.");
         }
     }
 }

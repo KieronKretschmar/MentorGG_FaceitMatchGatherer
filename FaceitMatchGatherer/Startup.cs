@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Database;
+using FaceitMatchGatherer.Middleware;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -48,6 +49,7 @@ namespace FaceitMatchGatherer
                 services.AddDebug();
             });
 
+
             #region database
 
             // if a connectionString is set use mysql, else use InMemory
@@ -59,12 +61,12 @@ namespace FaceitMatchGatherer
             else
             {
                 Console.WriteLine("WARNING: Using in memory database! Is `MYSQL_CONNECTION_STRING` set?");
-                services.AddDbContext<Database.FaceitContext>( options =>
-                    {
-                        options.UseInMemoryDatabase(databaseName: "MyInMemoryDatabase");
-                    });
+                services.AddDbContext<Database.FaceitContext>(options =>
+                   {
+                       options.UseInMemoryDatabase(databaseName: "MyInMemoryDatabase");
+                   });
             }
-			#endregion
+            #endregion
 
             if (Configuration.GetValue<bool>("IS_MIGRATING"))
             {
@@ -72,15 +74,36 @@ namespace FaceitMatchGatherer
                 return;
             }
 
+
+            string MENTORINTERFACE_BASE_ADDRESS = GetRequiredEnvironmentVariable<string>(Configuration, "MENTORINTERFACE_BASE_ADDRESS");
+            int MATCHES_LOOKER_MAX_USERS = GetOptionalEnvironmentVariable<int>(Configuration, "MATCHES_LOOKER_MAX_USERS", 20);
+            TimeSpan MATCHES_LOOKER_PERIOD_DAYS = TimeSpan.FromDays(GetOptionalEnvironmentVariable<double>(Configuration, "MATCHES_LOOKER_PERIOD_DAYS", 7));
+            TimeSpan MATCHES_LOOKER_ACTIVITY_TIMESPAN = TimeSpan.FromDays(GetOptionalEnvironmentVariable<double>(Configuration, "MATCHES_LOOKER_ACTIVITY_TIMESPAN", 21));
+
             services.AddSingleton<IFaceitApiCommunicator, FaceitApiCommunicator>();
             services.AddSingleton<IFaceitOAuthCommunicator, FaceitOAuthCommunicator>();
             services.AddTransient<IFaceitMatchesWorker, FaceitMatchesWorker>();
 
+            //services.AddTransient<IMatchLooker>(services =>
+            //{
+            //    return new MatchLooker(MATCHES_LOOKER_ACTIVITY_TIMESPAN, MATCHES_LOOKER_MAX_USERS, services.GetRequiredService<ILogger<MatchLooker>>(), services.GetRequiredService<FaceitContext>(), services.GetRequiredService<FaceitMatchesWorker>());
+            //});
+            //services.AddTransient<IPeriodicMatchLooker>(services =>
+            //{
+            //    return new PeriodicMatchLooker(MATCHES_LOOKER_PERIOD_DAYS, services.GetRequiredService<IMatchLooker>(), services.GetRequiredService<ILogger<PeriodicMatchLooker>>());
+            //});
+
+            services.AddHttpClient("mentor-interface", c =>
+            {
+                c.BaseAddress = new Uri(MENTORINTERFACE_BASE_ADDRESS);
+            });
+            services.AddTransient<IUserIdentityRetriever, UserIdentityRetriever>();
+
             #region RabbitMQ
 
-            var AMQP_URI = Configuration.GetValue<string>("AMQP_URI") ?? throw new ArgumentException("AMQP_URI is missing, configure the `AMQP_URI` enviroment variable.");
+            var AMQP_URI = GetRequiredEnvironmentVariable<string>(Configuration, "AMQP_URI");
 
-            var AMQP_FACEIT_QUEUE = Configuration.GetValue<string>("AMQP_FACEIT_QUEUE") ?? throw new ArgumentException("AMQP_FACEIT_QUEUE is missing, configure the `AMQP_FACEIT_QUEUE` enviroment variable.");
+            var AMQP_FACEIT_QUEUE = GetRequiredEnvironmentVariable<string>(Configuration, "AMQP_FACEIT_QUEUE");
 
             // Create producer
             var connection = new QueueConnection(AMQP_URI, AMQP_FACEIT_QUEUE);
@@ -122,6 +145,8 @@ namespace FaceitMatchGatherer
 
             app.UseAuthorization();
 
+            app.UseMiddleware(typeof(ErrorHandlingMiddleware));
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
@@ -142,6 +167,45 @@ namespace FaceitMatchGatherer
                 services.GetRequiredService<FaceitContext>().Database.Migrate();
             }
 
+        }
+
+        /// <summary>
+        /// Attempt to retrieve an Environment Variable
+        /// Throws ArgumentNullException is not found.
+        /// </summary>
+        /// <typeparam name="T">Type to retreive</typeparam>
+        private static T GetRequiredEnvironmentVariable<T>(IConfiguration config, string key)
+        {
+            T value = config.GetValue<T>(key);
+            if (value == null)
+            {
+                throw new ArgumentNullException(
+                    $"{key} is missing, Configure the `{key}` environment variable.");
+            }
+            else
+            {
+                return value;
+            }
+        }
+
+        /// <summary>
+        /// Attempt to retrieve an Environment Variable
+        /// Returns default value if not found.
+        /// </summary>
+        /// <typeparam name="T">Type to retreive</typeparam>
+        private static T GetOptionalEnvironmentVariable<T>(IConfiguration config, string key, T defaultValue)
+        {
+            var stringValue = config.GetSection(key).Value;
+            try
+            {
+                T value = (T)Convert.ChangeType(stringValue, typeof(T), System.Globalization.CultureInfo.InvariantCulture);
+                return value;
+            }
+            catch (InvalidCastException e)
+            {
+                Console.WriteLine($"Env var [ {key} ] not specified. Defaulting to [ {defaultValue} ]");
+                return defaultValue;
+            }
         }
     }
 }

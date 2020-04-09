@@ -12,6 +12,7 @@ namespace Entities.Models
         public string FaceitName { get; set; }
         public FaceitMembership FaceitMembership { get; set; }
         public DateTime LastChecked { get; set; }
+        public DateTime LastActivity { get; set; }
         public string Token { get; set; }
         public DateTime TokenExpires { get; set; }
         public string RefreshToken { get; set; }

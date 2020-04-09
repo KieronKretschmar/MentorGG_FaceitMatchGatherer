@@ -9,12 +9,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using RabbitCommunicationLib.Enums;
+using System.Net.Http;
 
 namespace FaceitMatchGatherer
 {
     public interface IFaceitMatchesWorker
     {
-        Task<bool> WorkUser(long steamId, int maxMatches, int maxAgeInDays, AnalyzerQuality quality);
+        Task<bool> WorkUser(long steamId, int maxMatches, int maxAgeInDays);
     }
 
     /// <summary>
@@ -26,13 +27,15 @@ namespace FaceitMatchGatherer
         private readonly FaceitContext _context;
         private readonly IFaceitApiCommunicator _apiCommunicator;
         private readonly IProducer<DemoInsertInstruction> _rabbitProducer;
+        private readonly IUserIdentityRetriever _userIdentityRetriever;
 
-        public FaceitMatchesWorker(ILogger<FaceitMatchesWorker> logger, FaceitContext context, IFaceitApiCommunicator apiCommunicator, IProducer<DemoInsertInstruction> rabbitProducer)
+        public FaceitMatchesWorker(ILogger<FaceitMatchesWorker> logger, FaceitContext context, IFaceitApiCommunicator apiCommunicator, IProducer<DemoInsertInstruction> rabbitProducer, IUserIdentityRetriever userIdentityRetriever)
         {
             _logger = logger;
             _context = context;
             _apiCommunicator = apiCommunicator;
             _rabbitProducer = rabbitProducer;
+            _userIdentityRetriever = userIdentityRetriever;
         }
 
         /// <summary>
@@ -42,8 +45,11 @@ namespace FaceitMatchGatherer
         /// <param name="maxMatches"></param>
         /// <param name="maxAgeInDays"></param>
         /// <returns>bool, whether a new match was found</returns>
-        public async Task<bool> WorkUser(long steamId, int maxMatches, int maxAgeInDays, AnalyzerQuality quality)
+        public async Task<bool> WorkUser(long steamId, int maxMatches, int maxAgeInDays)
         {
+            _logger.LogInformation($"Working user with steamId [ {steamId} ], maxMatches [ {maxMatches} ] and maxAgeInDays [ {maxAgeInDays} ]");
+
+            var quality = await _userIdentityRetriever.GetAnalyzerQualityAsync(steamId); 
             // Get new matches
             var matches = await GetNewMatches(steamId, maxMatches, maxAgeInDays, quality);
 
@@ -51,44 +57,73 @@ namespace FaceitMatchGatherer
             {
                 var demoInDb = _context.Matches.SingleOrDefault(x => x.FaceitMatchId == match.FaceitMatchId);
 
-                //TODO make a pretty upsert
+                if(demoInDb != null && demoInDb.AnalyzedQuality >= quality)
+                {
+                    // match is already known in at least the same quality
+                    continue;
+                }
+
+                // Update database for new demo
                 if (demoInDb == null)
-                    _context.Matches.Add(new Match
+                {
+                    _logger.LogInformation($"Found new match with FaceitMatchId [ {match.FaceitMatchId} ] for user with steamId [ {steamId} ]");
+
+                    var newMatch = new Match
                     {
                         FaceitMatchId = match.FaceitMatchId,
                         AnalyzedQuality = quality
-                    });
-                else
+                    };
+
+                    // Add to database
+                    _context.Matches.Add(newMatch);
+                    await _context.SaveChangesAsync();
+
+                    await PublishMessage(match.ToTransferModel());
+                    continue;
+                }
+
+                // Update database for re-analyzed demo
+                if (demoInDb.AnalyzedQuality < quality)
+                {
+                    _logger.LogInformation($"Found match to re-analyze with FaceitMatchId [ {match.FaceitMatchId} ] for user with steamId [ {steamId} ]. Previous quality [ {demoInDb.AnalyzedQuality} ], new quality [ {quality} ]");
+
+                    // update database
                     demoInDb.AnalyzedQuality = quality;
-               
+                    await _context.SaveChangesAsync();
 
-                await _context.SaveChangesAsync();
+                    await PublishMessage(match.ToTransferModel());
+                    continue;
+                }
 
-                // Create rabbit transfer model
-                var model = match.ToTransferModel();
-
-                _logger.LogInformation($"Publishing model with DownloadUrl [ {match.DownloadUrl} ] from uploader#{match.UploaderId} to queue.");
-
-                // Publish to rabbit queue
-                _rabbitProducer.PublishMessage(model);
             }
 
             // Update user.LastChecked
             var user = await _context.Users.FindAsync(steamId);
-            user.LastChecked = DateTime.Now;
+            user.LastChecked = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
             var matchesFound = matches.Any();
 
+            _logger.LogInformation($"Finish working user with steamId [ {steamId} ]");
             return matchesFound;
         }
 
+        /// <summary>
+        /// Returns matches that need to be updated as they're either new or only stored in lower quality.
+        /// </summary>
+        /// <param name="steamId"></param>
+        /// <param name="maxMatches"></param>
+        /// <param name="maxAgeInDays"></param>
+        /// <param name="requestedQuality"></param>
+        /// <returns></returns>
         private async Task<List<FaceitMatchData>> GetNewMatches(long steamId, int maxMatches, int maxAgeInDays, RabbitCommunicationLib.Enums.AnalyzerQuality requestedQuality)
         {
+            var faceitPlayerId = _context.Users.Single(x => x.SteamId == steamId).FaceitId;
+
             IEnumerable<FaceitMatchData> recentMatches;
             try
             {
-                recentMatches = await _apiCommunicator.GetPlayerMatches(steamId, maxMatches, maxAgeInDays);
+                recentMatches = await _apiCommunicator.GetPlayerMatches(steamId, faceitPlayerId, maxMatches, maxAgeInDays);
             }
             catch (Exception e)
             {
@@ -100,13 +135,14 @@ namespace FaceitMatchGatherer
                 throw;
             }
 
-
             // Remove matches already in db with higher or equal quality
             var knownMatchIds = _context.Matches
                 .Where(x => recentMatches.Select(y => y.FaceitMatchId).Contains(x.FaceitMatchId)).Where(y => y.AnalyzedQuality >= requestedQuality)
                 .Select(x => x.FaceitMatchId);
             var newMatches = recentMatches.Where(x => !knownMatchIds.Contains(x.FaceitMatchId))
                 .ToList();
+
+            _logger.LogInformation($" [ {newMatches.Count()}/{recentMatches.Count()} ] matches are new for user [ {steamId} ].");
 
             // Get DownloadUrls of new matches
             // Only do this for new matches as it requires an API call
@@ -127,6 +163,14 @@ namespace FaceitMatchGatherer
             }
 
             return newMatches;
+        }
+
+        private async Task PublishMessage(DemoInsertInstruction message)
+        {
+            // Publish to rabbit queue
+            _rabbitProducer.PublishMessage(message);
+
+            _logger.LogInformation($"Updated and published model with DownloadUrl [ {message.DownloadUrl} ] from uploader [ {message.UploaderId} ] to queue.");
         }
     }
 }

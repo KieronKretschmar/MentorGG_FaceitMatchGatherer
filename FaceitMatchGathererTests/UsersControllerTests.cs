@@ -162,7 +162,7 @@ namespace FaceitMatchGathererTests
                 var result = await controller.CreateUser(user.SteamId, "");
 
                 // Verify 400 response
-                Assert.IsInstanceOfType(result, typeof(Microsoft.AspNetCore.Mvc.BadRequestResult));
+                Assert.IsInstanceOfType(result, typeof(Microsoft.AspNetCore.Mvc.BadRequestObjectResult));
             }
 
             //Verify that no user is in database
@@ -281,10 +281,10 @@ namespace FaceitMatchGathererTests
 
                 // Create UsersController and call LookForMatches
                 var usersController = new UsersController(serviceProvider.GetService<ILogger<UsersController>>(), context, mockFaceitOAuthCommunicator.Object, mockFaceitApiCommunicator.Object, mockFaceitMatchesWorker.Object);
-                var lfmResponse = await usersController.LookForMatches(user.SteamId, AnalyzerQuality.High);
+                var lfmResponse = await usersController.LookForMatches(user.SteamId);
 
                 // Verify that WorkUser was called
-                mockFaceitMatchesWorker.Verify(x => x.WorkUser(user.SteamId, It.IsAny<int>(), It.IsAny<int>(), AnalyzerQuality.High), Times.Once);
+                mockFaceitMatchesWorker.Verify(x => x.WorkUser(user.SteamId, It.IsAny<int>(), It.IsAny<int>()), Times.Once);
             }
         }
     }

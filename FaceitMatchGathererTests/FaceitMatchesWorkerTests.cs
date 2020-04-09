@@ -55,7 +55,7 @@ namespace FaceitMatchGathererTests
             // Setup mockFaceitApiCommunicator such that GetPlayerMatches returns matches
             var mockFaceitApiCommunicator = new Mock<IFaceitApiCommunicator>();
             mockFaceitApiCommunicator
-                .Setup(x => x.GetPlayerMatches(It.Is<long>(x => x == steamId), It.Is<int>(x => x == maxMatches), It.Is<int>(x => x == maxAgeInDays)))
+                .Setup(x => x.GetPlayerMatches(It.Is<long>(x => x == steamId), It.IsAny<string>(), It.Is<int>(x => x == maxMatches), It.Is<int>(x => x == maxAgeInDays)))
                 .Returns(Task.FromResult(matches));
 
             var mockIUserIdentityRetriever = new Mock<IUserIdentityRetriever>();
@@ -112,7 +112,7 @@ namespace FaceitMatchGathererTests
                     FaceitMatchId = "testFaceitID",
                 };
                 var mockFaceitAPI = new Mock<IFaceitApiCommunicator>();
-                mockFaceitAPI.Setup(x => x.GetPlayerMatches(testSteamId, It.IsAny<int>(), It.IsAny<int>())).Returns(Task.FromResult<IEnumerable<FaceitMatchData>>(new List<FaceitMatchData> { testFaceitMatch }));
+                mockFaceitAPI.Setup(x => x.GetPlayerMatches(testSteamId, It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>())).Returns(Task.FromResult<IEnumerable<FaceitMatchData>>(new List<FaceitMatchData> { testFaceitMatch }));
                 mockFaceitAPI.Setup(x => x.GetDemoUrl(It.IsAny<string>())).Returns(Task.FromResult("testDownloadUrl"));
 
                 var mockRabbit = new Mock<IProducer<DemoInsertInstruction>>();
@@ -155,7 +155,7 @@ namespace FaceitMatchGathererTests
                     FaceitMatchId = "testFaceitID",
                 };
                 var mockFaceitAPI = new Mock<IFaceitApiCommunicator>();
-                mockFaceitAPI.Setup(x => x.GetPlayerMatches(testSteamId, It.IsAny<int>(), It.IsAny<int>())).Returns(Task.FromResult<IEnumerable<FaceitMatchData>>(new List<FaceitMatchData> { testFaceitMatch }));
+                mockFaceitAPI.Setup(x => x.GetPlayerMatches(testSteamId, It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>())).Returns(Task.FromResult<IEnumerable<FaceitMatchData>>(new List<FaceitMatchData> { testFaceitMatch }));
                 mockFaceitAPI.Setup(x => x.GetDemoUrl(It.IsAny<string>())).Returns(Task.FromResult("testDownloadUrl"));
 
                 var mockRabbit = new Mock<IProducer<DemoInsertInstruction>>();

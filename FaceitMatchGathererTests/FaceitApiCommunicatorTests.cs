@@ -55,13 +55,13 @@ namespace FaceitMatchGathererTests
         /// <param name="maxAgeInDays"></param>
         /// <returns></returns>
         [DataTestMethod]
-        [DataRow(76561198033880857, 100, 10000)]
-        [DataRow(76561198033880857, 100, 1)]
-        [DataRow(76561198033880857, 1, 1000)]
-        public async Task GetPlayerMatchesTest(long steamId, int maxMatches, int maxAgeInDays)
+        [DataRow(76561198033880857, "b965f4cf-1bfb-4e13-8b75-66dd7377a319", 100, 10000)]
+        [DataRow(76561198033880857, "b965f4cf-1bfb-4e13-8b75-66dd7377a319", 100, 1)]
+        [DataRow(76561198033880857, "b965f4cf-1bfb-4e13-8b75-66dd7377a319", 1, 1000)]
+        public async Task GetPlayerMatchesTest(long steamId, string faceitPlayerId, int maxMatches, int maxAgeInDays)
         {
             var apiCommunicator = new FaceitApiCommunicator(serviceProvider.GetService<ILogger<FaceitApiCommunicator>>(), config);
-            var matches = await apiCommunicator.GetPlayerMatches(steamId, maxMatches, maxAgeInDays);
+            var matches = await apiCommunicator.GetPlayerMatches(steamId, faceitPlayerId, maxMatches, maxAgeInDays);
 
             // Check if not too many matches were pulled
             Assert.IsTrue(matches.Count() <= maxMatches);

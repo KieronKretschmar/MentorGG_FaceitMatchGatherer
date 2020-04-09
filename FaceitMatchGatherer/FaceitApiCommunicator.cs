@@ -14,7 +14,7 @@ namespace FaceitMatchGatherer
     {
         Task<string> GetDemoUrl(string faceitMatchId);
         Task<long> GetSteamId(string faceItName);
-        Task<IEnumerable<FaceitMatchData>> GetPlayerMatches(long steamId, int maxMatches, int maxAgeInDays);
+        Task<IEnumerable<FaceitMatchData>> GetPlayerMatches(long steamId, string faceitPlayerId, int maxMatches, int maxAgeInDays);
     }
 
     /// <summary>
@@ -47,12 +47,12 @@ namespace FaceitMatchGatherer
             return steamId;
         }
 
-        public async Task<IEnumerable<FaceitMatchData>> GetPlayerMatches(long steamId, int maxMatches, int maxAgeInDays)
+        public async Task<IEnumerable<FaceitMatchData>> GetPlayerMatches(long steamId, string faceitPlayerId, int maxMatches, int maxAgeInDays)
         {
             List<FaceitMatchData> matches = new List<FaceitMatchData>();
 
             //Gather Matchlist from API as JSON
-            var response = await Client.GetAsync("https://open.faceit.com/data/v4/players/" + steamId + "/history?game=csgo&limit=" + maxMatches + "&from=0&offset=0");
+            var response = await Client.GetAsync("https://open.faceit.com/data/v4/players/" + faceitPlayerId + "/history?game=csgo&limit=" + maxMatches + "&from=0&offset=0");
             string responseString = await response.Content.ReadAsStringAsync();
             JObject json = JObject.Parse(responseString);
 

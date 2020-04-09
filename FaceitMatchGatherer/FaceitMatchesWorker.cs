@@ -110,10 +110,12 @@ namespace FaceitMatchGatherer
 
         private async Task<List<FaceitMatchData>> GetNewMatches(long steamId, int maxMatches, int maxAgeInDays, RabbitCommunicationLib.Enums.AnalyzerQuality requestedQuality)
         {
+            var faceitPlayerId = _context.Users.Single(x => x.SteamId == steamId).FaceitId;
+
             IEnumerable<FaceitMatchData> recentMatches;
             try
             {
-                recentMatches = await _apiCommunicator.GetPlayerMatches(steamId, maxMatches, maxAgeInDays);
+                recentMatches = await _apiCommunicator.GetPlayerMatches(steamId, faceitPlayerId, maxMatches, maxAgeInDays);
             }
             catch (Exception e)
             {

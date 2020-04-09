@@ -93,9 +93,9 @@ namespace FaceitMatchGatherer
             //});
 
             services.AddHttpClient("mentor-interface", c =>
-             {
-                 c.BaseAddress = new Uri(MENTORINTERFACE_BASE_ADDRESS);
-             });
+            {
+                c.BaseAddress = new Uri(MENTORINTERFACE_BASE_ADDRESS);
+            });
             services.AddTransient<IUserIdentityRetriever, UserIdentityRetriever>();
 
             #region RabbitMQ

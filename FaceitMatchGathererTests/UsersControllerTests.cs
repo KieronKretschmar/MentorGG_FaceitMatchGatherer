@@ -162,7 +162,7 @@ namespace FaceitMatchGathererTests
                 var result = await controller.CreateUser(user.SteamId, "");
 
                 // Verify 400 response
-                Assert.IsInstanceOfType(result, typeof(Microsoft.AspNetCore.Mvc.BadRequestResult));
+                Assert.IsInstanceOfType(result, typeof(Microsoft.AspNetCore.Mvc.BadRequestObjectResult));
             }
 
             //Verify that no user is in database

@@ -134,8 +134,6 @@ namespace FaceitMatchGatherer.Controllers
         {
             _logger.LogInformation($"LookForMatches called with steamId [ {steamId} ]");
 
-
-
             var user =  _context.Users.Find(steamId);
 
             // Workaround while filling up database pre-release of kubernetes backend

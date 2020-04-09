@@ -40,7 +40,7 @@ namespace FaceitMatchGatherer
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning(
-                    $"Getting UserIdentity for SteamId [ {steamId} ]. Response: {response}. Returning AnalyzerQuality.Low");
+                    $"Getting UserIdentity for SteamId [ {steamId} ]. Response StatusCode: [ {response.StatusCode} ]. Returning AnalyzerQuality.Low");
 
                 return AnalyzerQuality.Low;
             }

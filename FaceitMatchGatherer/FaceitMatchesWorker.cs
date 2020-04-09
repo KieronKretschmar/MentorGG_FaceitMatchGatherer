@@ -94,8 +94,6 @@ namespace FaceitMatchGatherer
                     // match is already known in at least the same quality
                     continue;
                 }
-
-
             }
 
             // Update user.LastChecked
@@ -105,9 +103,18 @@ namespace FaceitMatchGatherer
 
             var matchesFound = matches.Any();
 
+            _logger.LogInformation($"Finish working user with steamId [ {steamId} ]");
             return matchesFound;
         }
 
+        /// <summary>
+        /// Returns matches that need to be updated as they're either new or only stored in lower quality.
+        /// </summary>
+        /// <param name="steamId"></param>
+        /// <param name="maxMatches"></param>
+        /// <param name="maxAgeInDays"></param>
+        /// <param name="requestedQuality"></param>
+        /// <returns></returns>
         private async Task<List<FaceitMatchData>> GetNewMatches(long steamId, int maxMatches, int maxAgeInDays, RabbitCommunicationLib.Enums.AnalyzerQuality requestedQuality)
         {
             var faceitPlayerId = _context.Users.Single(x => x.SteamId == steamId).FaceitId;
@@ -127,13 +134,14 @@ namespace FaceitMatchGatherer
                 throw;
             }
 
-
             // Remove matches already in db with higher or equal quality
             var knownMatchIds = _context.Matches
                 .Where(x => recentMatches.Select(y => y.FaceitMatchId).Contains(x.FaceitMatchId)).Where(y => y.AnalyzedQuality >= requestedQuality)
                 .Select(x => x.FaceitMatchId);
             var newMatches = recentMatches.Where(x => !knownMatchIds.Contains(x.FaceitMatchId))
                 .ToList();
+
+            _logger.LogInformation($" [ {newMatches.Count()}/{recentMatches.Count()} ] matches are new for user [ {steamId} ].");
 
             // Get DownloadUrls of new matches
             // Only do this for new matches as it requires an API call

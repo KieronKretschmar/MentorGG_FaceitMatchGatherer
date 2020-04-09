@@ -91,7 +91,9 @@ namespace FaceitMatchGatherer
                     _logger.LogError(e, $"Error reading Faceit match with id .");
                     continue;
                 }
-            }            
+            }
+
+            _logger.LogInformation($"API returned [ {matches.Count()} ] matches for user [ {steamId} ]");
 
             return matches;
         }

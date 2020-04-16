@@ -287,5 +287,32 @@ namespace FaceitMatchGathererTests
                 mockFaceitMatchesWorker.Verify(x => x.WorkUser(user.SteamId, It.IsAny<int>(), It.IsAny<int>()), Times.Once);
             }
         }
+
+        [TestMethod]
+        public async Task SetsLastActivity()
+        {
+            var options = FaceitTestHelper.GetDatabaseOptions("test_SetsLastActivity");
+            long testSteamId = 123456789;
+
+            // Setup mocks
+            var mockILogger = new Mock<ILogger<UsersController>>();
+            var mockFaceitOAuthCommunicator = new Mock<IFaceitOAuthCommunicator>();
+            var mockFaceitApiCommunicator = new Mock<IFaceitApiCommunicator>();
+            var mockFaceitMatchesWorker = new Mock<IFaceitMatchesWorker>();
+
+            using (var context = new FaceitContext(options))
+            {
+                context.Users.Add(new User { SteamId = testSteamId });
+                var test = new UsersController(mockILogger.Object, context, mockFaceitOAuthCommunicator.Object, mockFaceitApiCommunicator.Object, mockFaceitMatchesWorker.Object);
+                await test.LookForMatches(testSteamId);
+            }
+
+            using (var confirmContext = new FaceitContext(options))
+            {
+                var user = confirmContext.Users.Single(x => x.SteamId == testSteamId);
+                Assert.IsTrue(user.LastActivity != default);
+                Assert.IsTrue((user.LastActivity - DateTime.UtcNow) < TimeSpan.FromMinutes(5));
+            }
+        }
     }
 }

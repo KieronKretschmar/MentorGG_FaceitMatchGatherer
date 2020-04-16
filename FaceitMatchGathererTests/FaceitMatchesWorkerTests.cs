@@ -205,5 +205,39 @@ namespace FaceitMatchGathererTests
                 Assert.AreEqual(context.Matches.First().AnalyzedQuality, AnalyzerQuality.High);
             }
         }
+
+        //This is WIP, as it is a cluster fuck to test
+        [Ignore]
+        [TestMethod]
+        public async Task WorkUserSetsLastCheckedAsync()
+        {
+            var testOptions = FaceitTestHelper.GetDatabaseOptions("test_WorkUserSersLastChecked");
+            var testSteamId = 123456789;
+            var testFaceitId = "123456789";
+            var testMaxMatches = 1;
+            var testMaxAgeDays = 1;
+
+            var mockFaceitAPI = new Mock<IFaceitApiCommunicator>();
+            var mockLogger = new Mock<ILogger<FaceitMatchesWorker>>();
+            var mockRabbitProducer = new Mock<IProducer<DemoInsertInstruction>>();
+            var mockUserRetriever = new Mock<IUserIdentityRetriever>();
+
+            mockFaceitAPI.Setup(x => x.GetPlayerMatches(testSteamId, testFaceitId, testMaxMatches, testMaxAgeDays)).Returns(Task.FromResult<IEnumerable<FaceitMatchData>>(new List<FaceitMatchData>()));
+
+            using (var context = new FaceitContext(testOptions))
+            {
+                context.Users.Add(new User { SteamId = testSteamId, FaceitId = testFaceitId });
+
+                var test = new FaceitMatchesWorker(mockLogger.Object, context, mockFaceitAPI.Object, mockRabbitProducer.Object, mockUserRetriever.Object);
+                await test.WorkUser(testSteamId,testMaxMatches,testMaxAgeDays);
+            }
+
+            using(var confirmContext = new FaceitContext(testOptions))
+            {
+                var user = confirmContext.Users.Single(x => x.SteamId == testSteamId);
+                Assert.IsTrue(user.LastChecked != default);
+                Assert.IsTrue((user.LastChecked - DateTime.UtcNow) < TimeSpan.FromMinutes(5));
+            }
+        }
     }
 }

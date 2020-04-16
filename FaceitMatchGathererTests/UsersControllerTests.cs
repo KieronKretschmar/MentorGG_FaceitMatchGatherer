@@ -181,7 +181,7 @@ namespace FaceitMatchGathererTests
         public async Task FailedUserCreationTest()
         {
             var options = FaceitTestHelper.GetDatabaseOptions("FailedUserCreationTest");
-            var steamId = (long)new Random().Next(1, 99999999);
+            var steamId = (long) new Random().Next(1, 99999999);
 
             // Call with (mocked) invalid code and expect BadRequest
             using (var context = new FaceitContext(options))
@@ -192,7 +192,7 @@ namespace FaceitMatchGathererTests
                 // Setup mockFaceitOAuthCommunicator and make its CreateUser() method throw a FaceitFailedUserCreationException
                 var mockFaceitOAuthCommunicator = new Mock<IFaceitOAuthCommunicator>();
                 mockFaceitOAuthCommunicator
-                    .Setup(x => x.CreateUser(It.Is<long>(x=> x == steamId), It.IsAny<string>()))
+                    .Setup(x => x.CreateUser(It.Is<long>(x => x == steamId), It.IsAny<string>()))
                     .Throws(new FaceitOAuthCommunicator.FaceitFailedUserCreationException(""));
 
                 // Create UsersController and call PostUser
@@ -220,7 +220,7 @@ namespace FaceitMatchGathererTests
         public async Task DeleteUserTest()
         {
             var options = FaceitTestHelper.GetDatabaseOptions("DeleteUserTest");
-            var user = new User { SteamId = (long)new Random().Next(1, 99999999), FaceitName = "MyFaceitName" };
+            var user = new User { SteamId = (long) new Random().Next(1, 99999999), FaceitName = "MyFaceitName" };
 
             // Create User
             using (var context = new FaceitContext(options))
@@ -261,7 +261,7 @@ namespace FaceitMatchGathererTests
         public async Task LookForMatchesTest()
         {
             var options = FaceitTestHelper.GetDatabaseOptions("LookForMatchesTest");
-            var user = new User { SteamId = (long)new Random().Next(1, 99999999), FaceitName = "MyFaceitName" };
+            var user = new User { SteamId = (long) new Random().Next(1, 99999999), FaceitName = "MyFaceitName" };
 
             // Create User
             using (var context = new FaceitContext(options))

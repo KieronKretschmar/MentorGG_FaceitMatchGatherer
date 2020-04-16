@@ -137,7 +137,7 @@ namespace FaceitMatchGathererTests
                 var mockUserIdentityRetriever = new Mock<IUserIdentityRetriever>();
                 mockUserIdentityRetriever.Setup(x => x.GetAnalyzerQualityAsync(It.IsAny<long>())).Returns(Task.FromResult(AnalyzerQuality.High));
 
-                var test = new FaceitMatchesWorker(serviceProvider.GetRequiredService<ILogger<FaceitMatchesWorker>>(), context, mockFaceitAPI.Object, mockRabbit.Object,mockUserIdentityRetriever.Object);
+                var test = new FaceitMatchesWorker(serviceProvider.GetRequiredService<ILogger<FaceitMatchesWorker>>(), context, mockFaceitAPI.Object, mockRabbit.Object, mockUserIdentityRetriever.Object);
 
                 firstMatchCheck = await test.WorkUser(user.SteamId, 5, 5);
                 mockUserIdentityRetriever.Setup(x => x.GetAnalyzerQualityAsync(It.IsAny<long>())).Returns(Task.FromResult(AnalyzerQuality.Low));

@@ -18,9 +18,9 @@ namespace FaceitMatchGatherer
         private readonly int _maxUsersToRefresh;
         private readonly ILogger<MatchLooker> _logger;
         private readonly FaceitContext _context;
-        private readonly FaceitMatchesWorker _matchesWorker;
+        private readonly IFaceitMatchesWorker _matchesWorker;
 
-        public MatchLooker(TimeSpan timeSinceLastActivity, int maxUsersToRefresh, ILogger<MatchLooker> logger, FaceitContext context, FaceitMatchesWorker matchesWorker)
+        public MatchLooker(TimeSpan timeSinceLastActivity, int maxUsersToRefresh, ILogger<MatchLooker> logger, FaceitContext context, IFaceitMatchesWorker matchesWorker)
         {
             _timeSinceLastActivity = timeSinceLastActivity;
             _maxUsersToRefresh = maxUsersToRefresh;

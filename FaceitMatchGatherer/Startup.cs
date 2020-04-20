@@ -84,6 +84,7 @@ namespace FaceitMatchGatherer
             services.AddSingleton<IFaceitOAuthCommunicator, FaceitOAuthCommunicator>();
             services.AddTransient<IFaceitMatchesWorker, FaceitMatchesWorker>();
 
+            //@Lasse I'm not convinced that adding them as transient would have worked. Please consider adding them the same way as it's done in MentorInterface
             //services.AddTransient<IMatchLooker>(services =>
             //{
             //    return new MatchLooker(MATCHES_LOOKER_ACTIVITY_TIMESPAN, MATCHES_LOOKER_MAX_USERS, services.GetRequiredService<ILogger<MatchLooker>>(), services.GetRequiredService<FaceitContext>(), services.GetRequiredService<FaceitMatchesWorker>());

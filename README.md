@@ -17,6 +17,10 @@ Required for communication with [Faceit's Data API](https://developers.faceit.co
 Required for communication with MentorInterface
 - `MENTORINTERFACE_BASE_ADDRESS` : http address to mentor interface [*]
 Required for the background service refreshing active users matches
+
+@Lasse: Why did you not use the environment vars I explicitly requested in the Issue? 
+        That would've made things easier, and would've also prevented a (fixed) bug you introduced regarding typos in these variable names
+        I invested time to create the issue and chose them for a reason. If you disagree or think I made a mistake we should have a discussion about it.
 - `MATCHES_LOOKER_MAX_USERS` : max amount of users to refresh in one interval - defaults to 20
 - `MATCHES_LOOKER_PERIOD_DAYS` : interval in which to call match looker for a user refresh - defaults to 7 days
 - `MATCHES_LOOKER_ACTIVITY_TIMESPAN` : interval in which users had to be active for matches to be recognized - defaults to 21 days

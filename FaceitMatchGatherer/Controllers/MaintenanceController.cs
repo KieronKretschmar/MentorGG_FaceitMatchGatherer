@@ -57,7 +57,7 @@ namespace FaceitMatchGatherer.Controllers
             if (faceitIdentifiers.Count < 1)
             {
                 _logger.LogError(
-                    "No matches found, cannot produce any DemoInsertInstructions");
+                    "No matches found, cannot produce DemoInsertInstructions");
             }
                 
             foreach (var id in faceitIdentifiers)
@@ -77,7 +77,7 @@ namespace FaceitMatchGatherer.Controllers
                 };
 
                 _logger.LogInformation(
-                    $"Maintenance: Sending DemoInsertInstruction with DownloadUrl [{message.DownloadUrl} ].");
+                    $"Maintenance: Sending DemoInsertInstruction with DownloadUrl [ {message.DownloadUrl} ].");
 
                 _rabbitProducer.PublishMessage(message);
                 

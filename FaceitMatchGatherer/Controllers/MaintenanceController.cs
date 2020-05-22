@@ -47,19 +47,22 @@ namespace FaceitMatchGatherer.Controllers
         [HttpGet("flood/{amount}")]
         public async Task Flood(int amount)
         {
-            List<Match> matches = _context.Matches
-                .TakeLast(amount)
+            _logger.LogInformation($"Received Flood Request of [ {amount} ].");
+
+            List<string> faceitIdentifiers = _context.Matches
+                .Select(x=>x.FaceitMatchId)
+                .Take(amount)
                 .ToList();
 
-            if (matches.Count < 1)
+            if (faceitIdentifiers.Count < 1)
             {
                 _logger.LogError(
                     "No matches found, cannot produce any DemoInsertInstructions");
             }
                 
-            foreach (var match in matches)
+            foreach (var id in faceitIdentifiers)
             {
-                string downloadUrl = await _faceitApi.GetDemoUrl(match.FaceitMatchId);
+                string downloadUrl = await _faceitApi.GetDemoUrl(id);
 
                 if (string.IsNullOrEmpty(downloadUrl))
                     continue;

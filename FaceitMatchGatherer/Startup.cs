@@ -56,7 +56,16 @@ namespace FaceitMatchGatherer
             var connString = Configuration.GetValue<string>("MYSQL_CONNECTION_STRING");
             if (connString != null)
             {
-                services.AddDbContext<Database.FaceitContext>(o => { o.UseMySql(connString); });
+
+                services.AddDbContext<Database.FaceitContext>(o => 
+                {
+                    o.UseMySql(
+                        connString,
+                        options =>
+                        {
+                            options.EnableRetryOnFailure();
+                        });
+                }, ServiceLifetime.Transient, ServiceLifetime.Transient);
             }
             else
             {
